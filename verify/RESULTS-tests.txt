@@ -1,0 +1,30 @@
+go test ./... ohne PostgreSQL-Datenbank (ARTEX_PG_DSN nicht gesetzt)
+Stand: 2026-11-24
+
+Fehlschlaege in der UNVERAENDERTEN FailSafe-Basis:       22
+Fehlschlaege in der deutschen Version:                  22
+Nur in der deutschen Version fehlschlagend:        0
+
+Alle Fehlschlaege benoetigen eine laufende PostgreSQL-Datenbank und schlagen im Original identisch fehl:
+  TestFindingTrafficAPIAndExport
+  TestFindingTrafficArchiveV3RoundTripAndRetry
+  TestFindingTrafficFailedReportDoesNotTrigger
+  TestFindingTrafficToolUpgradePreservesCustomization
+  TestFindingTrafficUTF8SegmentsAndInheritedWrites
+  TestFindingWorkflowAutoHintToPlannerAndSetting
+  TestFindingWorkflowMigrationPreservesUserConfiguration
+  TestFindingWorkflowReporterBindsBeforeWritingReport
+  TestNotifyChannelAPICreateValidation
+  TestNotifyChannelAPIMasksSecretsAndPreservesOnUpdate
+  TestNotifyDeepLinkUsesPublicBaseURL
+  TestNotifyDeliveriesHistoryAndRetry
+  TestNotifyDigestBatchesMultipleFindingsIntoOneMessage
+  TestNotifyDigestSegmentsAndDefersRemainder
+  TestNotifyDisabledChannelDoesNotSend
+  TestNotifyEndToEndRealtimeDelivery
+  TestNotifyFilterBlocksBelowThreshold
+  TestNotifyMetaAndSettingsRoundTrip
+  TestNotifyNoDeepLinkWithoutBaseURL
+  TestNotifyStatusChangeDelivery
+  TestNotifyStatusChangeSuppressedByDefault
+  TestNotifyTestMessageEndpoint

@@ -1,0 +1,185 @@
+
+REVIEW - 46 changed literals in logic positions (confirm they are display text):
+  agent/prompt_prefix_test.go [call Contains]
+      before: "意图 id: 11"
+      after:  "Absicht id: 11"
+  agent/prompt_test.go [call Contains]
+      before: "中间产物输出规约"
+      after:  "Zwischenergebnis-Ausgaberegel"
+  agent/prompt_test.go [call Contains]
+      before: "中间产物输出规约"
+      after:  "Zwischenergebnis-Ausgaberegel"
+  agent/side_questions_test.go [call Contains]
+      before: "不能执行工具"
+      after:  "keine Werkzeugoperationen ausführen"
+  agent/terminalreason_test.go [call Contains]
+      before: "规划者"
+      after:  "Planer"
+  agent/terminalreason_test.go [call Contains]
+      before: "用户停止"
+      after:  "Runde gestoppt"
+  agent/terminalreason_test.go [call Contains]
+      before: "用户暂停"
+      after:  "Aufgabe pausiert"
+  agent/terminalreason_test.go [call Contains]
+      before: "未返回结果"
+      after:  "kein Ergebnis zurückgegeben"
+  agent/terminalreason_test.go [call Contains]
+      before: "已正常返回"
+      after:  "normal zurückgegeben"
+  agent/terminalreason_test.go [call Contains]
+      before: "运行预算上限"
+      after:  "Laufbudget-Obergrenze"
+  agent/terminalreason_test.go [call Contains]
+      before: "中断"
+      after:  "unterbrochen"
+  agent/tools_nil_store_test.go [call Contains]
+      before: "任务上下文"
+      after:  "Task-Kontext"
+  db/chat_mentions.go [call QueryContext]
+      before: `
+SELECT kind, id, left(label, 160), left(description, 240) FROM (
+ (SELECT 'finding' AS kind, id, COALESCE(NU
+      after:  `
+SELECT kind, id, left(label, 160), left(description, 240) FROM (
+ (SELECT 'finding' AS kind, id, COALESCE(NU
+  db/db.go [call Exec]
+      before: "禁止调用删除类接口（/delete /remove /unlink /erase 等），不论使用哪种 HTTP 方法——多数应用的删除接口用 GET/POST 就能触发，同样会真实删除目标数据"
+      after:  "Aufruf von Löschtyp-Schnittstellen verboten (/delete /remove /unlink /erase etc.), egal welche HTTP-Methode —
+  db/finding_retests.go [call QueryRowContext]
+      before: `SELECT COALESCE(NULLIF(f.name,''), NULLIF(f.vulnclass,''), '未分类'),
+	jsonb_build_object('finding', to_jsonb(f)
+      after:  `SELECT COALESCE(NULLIF(f.name,''), NULLIF(f.vulnclass,''), 'nicht kategorisiert'),
+	jsonb_build_object('findi
+  db/finding_retests.go [call QueryRow]
+      before: `UPDATE finding_retests SET
+	status=CASE WHEN $2='completed' AND verdict='' THEN 'failed' ELSE $2 END,
+	error=
+      after:  `UPDATE finding_retests SET
+	status=CASE WHEN $2='completed' AND verdict='' THEN 'failed' ELSE $2 END,
+	error=
+  db/finding_retests.go [call Exec]
+      before: `UPDATE finding_retests SET status='stopped', error='服务重启，复测已中断，请重新发起', finished_at=now() WHERE status IN ('pe
+      after:  `UPDATE finding_retests SET status='stopped', error='Dienst neu gestartet, Retest unterbrochen, bitte erneut s
+  db/notification.go [call ExecContext]
+      before: "渠道已停用"
+      after:  "Kanal deaktiviert"
+  db/side_questions.go [call ExecContext]
+      before: `UPDATE side_question_requests SET status='interrupted',error='服务重启，回答已中断',sequence=sequence+1 WHERE status='r
+      after:  `UPDATE side_question_requests SET status='interrupted',error='Dienst neu gestartet, Antwort unterbrochen',seq
+  db/task_archives.go [call Exec]
+      before: `UPDATE task_archives SET
+	 state=CASE state WHEN 'archiving' THEN 'archive_failed'
+	                  WHEN 'r
+      after:  `UPDATE task_archives SET
+	 state=CASE state WHEN 'archiving' THEN 'archive_failed'
+	                  WHEN 'r
+  db/task_assets.go [call Query]
+      before: `
+WITH context AS (
+    SELECT task.id AS task_id, task.exploration_id, false AS inherited
+    FROM tasks task
+      after:  `
+WITH context AS (
+    SELECT task.id AS task_id, task.exploration_id, false AS inherited
+    FROM tasks task
+  db/tasks.go [call QueryRow]
+      before: `
+WITH requested(company_id, position) AS (
+    SELECT company_id, position
+    FROM unnest($2::bigint[]) WITH
+      after:  `
+WITH requested(company_id, position) AS (
+    SELECT company_id, position
+    FROM unnest($2::bigint[]) WITH
+  db/tasks.go [call Exec]
+      before: `
+INSERT INTO task_asset_links(task_id, asset_id, source, source_summary)
+SELECT $1, asset.id, $3, '任务创建时关联企业：
+      after:  `
+INSERT INTO task_asset_links(task_id, asset_id, source, source_summary)
+SELECT $1, asset.id, $3, 'Bei Aufgab
+  db/tasks.go [call QueryRow]
+      before: `
+UPDATE tasks
+   SET first_run_at = COALESCE(first_run_at, now()),
+       deadline_at  = CASE
+           WHEN
+      after:  `
+UPDATE tasks
+   SET first_run_at = COALESCE(first_run_at, now()),
+       deadline_at  = CASE
+           WHEN
+  notify/channels_test.go [call Contains]
+      before: "近 30 分钟"
+      after:  "In den letzten 30 Minuten"
+  notify/channels_test.go [comparison]
+      before: `[🟠 高危] 登录处 "SQL注入" 风险`
+      after:  `[🟠 Hoch] 登录处 "SQL注入" 风险`
+  notify/pack_test.go [call Contains]
+      before: "其余"
+      after:  "restlichen"
+  notify/pack_test.go [call Contains]
+      before: "下一条消息继续"
+      after:  "folgen in der nächsten Nachricht"
+  notify/pack_test.go [call Contains]
+      before: "其余"
+      after:  "restlichen"
+  notify/pack_test.go [call Contains]
+      before: "下一条继续"
+      after:  "folgen in nächster Nachricht"
+  notify/render_test.go [call Contains]
+      before: "等 5 个"
+      after:  "usw. 5 Assets"
+  notify/render_test.go [comparison]
+      before: "已修复"
+      after:  "Behoben"
+  notify/webhook_template_test.go [call Contains]
+      before: "合法 JSON"
+      after:  "gültiges JSON"
+  server/chat_mentions_test.go [call Contains]
+      before: "已截断"
+      after:  "gekürzt"
+  server/conversations.go [comparison]
+      before: "新对话"
+      after:  "Neue Unterhaltung"
+  server/finding_retests.go [call QueryRow]
+      before: `INSERT INTO agents(key,name,description,role,builtin,enabled)
+	VALUES ($1,'漏洞复测','从漏洞详情手动启动，读取原证据并保存独立复测结论。',
+      after:  `INSERT INTO agents(key,name,description,role,builtin,enabled)
+	VALUES ($1,'Schwachstellen-Retest','Manuell vo
+  server/finding_retests.go [call QueryRow]
+      before: `INSERT INTO agent_prompts(agent_id,version,template_text,note,updated_by)
+		VALUES ($1,1,$2,'内置默认','system') 
+      after:  `INSERT INTO agent_prompts(agent_id,version,template_text,note,updated_by)
+		VALUES ($1,1,$2,'Interner Standar
+  server/skill_upload_test.go [call Contains]
+      before: "不支持的压缩方式"
+      after:  "nicht unterstützte Kompressionsmethode"
+  server/skill_upload_test.go [call Contains]
+      before: "已加密"
+      after:  "verschlüsselt"
+  server/skill_upload_test.go [call Contains]
+      before: "非法路径"
+      after:  "ungültigen Pfad"
+  server/task_delete_barrier_test.go [call Contains]
+      before: "正在删除"
+      after:  "wird gelöscht"
+  server/trigger_merge_test.go [call Contains]
+      before: "触发 39"
+      after:  "Auslöser 39"
+  server/trigger_merge_test.go [call Contains]
+      before: "共 2 个任务"
+      after:  "insgesamt 2 Aufgaben"
+  server/trigger_merge_test.go [call HasPrefix]
+      before: "【任务 #72"
+      after:  "【Aufgabe #72"
+  sidequestion/context_test.go [call Contains]
+      before: "未能进一步缩减"
+      after:  "nicht weiter reduzieren"
+  sidequestion/sidequestion_test.go [call Contains]
+      before: "不能执行工具"
+      after:  "keine Werkzeugoperationen ausführen"
+
+Go files: 335 | code identical: 196 | only text literals changed: 139 (1774 literals) | new URLs: 0
+RESULT: PASS - the code is token-identical; only Chinese text literals were translated; no new URLs.

@@ -1,0 +1,129 @@
+# syntax=docker/dockerfile:1.7
+#
+# FailSafe ARTEX full build.
+#
+# Builds ARTEX v0.3.15 from source with the upstream runtime capabilities:
+# Node 22, Playwright MCP/CLI, Chromium, and the usual recon tools. It does not
+# pull a prebuilt ARTEX image. The runtime runs as root, as upstream does, so
+# nmap raw scans and runtime tool installation work; the compose file still
+# binds the console to localhost and adds no-new-privileges.
+#
+# Base images and Playwright packages are pinned. Update them deliberately,
+# then re-audit.
+
+ARG GO_IMAGE=golang:1.26.10@sha256:cfa27959837144bf4649802ba38e59daffd0dd2a7994aa83daaf113285b0f551
+ARG NODE_IMAGE=node:22-slim@sha256:83f487e0a63425e5b4d146fb5e5be574bcbe1b7b843d3ebafdd95eaf7767a7e5
+ARG PYTHON_IMAGE=python:3.12-slim-bookworm@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337
+
+ARG PLAYWRIGHT_MCP_VERSION=0.0.85
+ARG PLAYWRIGHT_CLI_VERSION=0.1.24
+ARG PLAYWRIGHT_VERSION=1.65.0
+
+FROM ${NODE_IMAGE} AS web-builder
+WORKDIR /src/web
+COPY web/package.json web/package-lock.json ./
+# --ignore-scripts avoids lifecycle hooks such as husky's prepare script.
+RUN npm ci --ignore-scripts
+COPY web/ ./
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run build:static
+
+FROM ${GO_IMAGE} AS go-builder
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+COPY . .
+COPY --from=web-builder /src/web/out /src/server/webui/dist
+# Keep symbols for auditability; disable build IDs for reproducibility.
+# The version suffix disables the upstream one-click updater.
+RUN CGO_ENABLED=0 go build \
+      -trimpath \
+      -buildvcs=false \
+      -tags embedui \
+      -ldflags="-buildid= -X main.version=v0.3.15-failsafe.3" \
+      -o /out/artex ./cmd/artex
+
+FROM ${PYTHON_IMAGE} AS runtime
+ARG PLAYWRIGHT_MCP_VERSION
+ARG PLAYWRIGHT_CLI_VERSION
+ARG PLAYWRIGHT_VERSION
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates ripgrep curl wget vim git jq unzip tzdata binutils \
+      dnsutils iputils-ping netcat-openbsd inetutils-telnet whois nmap \
+    && rm -rf /var/lib/apt/lists/*
+
+# Bring Node 22 in from the pinned builder stage. COPY dereferences the npm/npx
+# symlinks, so recreate them against the copied node_modules tree.
+COPY --from=web-builder /usr/local/bin/node /usr/local/bin/node
+COPY --from=web-builder /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -sf ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+    && ln -sf ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx \
+    && node --version && npm --version
+
+# Install the same browser stack as upstream, pinned. Install Chromium for the
+# top-level Playwright and for the nested copies used by MCP and CLI.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN npm install -g --ignore-scripts --registry=https://registry.npmjs.org/ \
+      @playwright/mcp@${PLAYWRIGHT_MCP_VERSION} \
+      @playwright/cli@${PLAYWRIGHT_CLI_VERSION} \
+      playwright@${PLAYWRIGHT_VERSION} \
+    && playwright --version \
+    && playwright install --with-deps chromium \
+    && for pw in /usr/local/lib/node_modules/@playwright/*/node_modules/playwright/cli.js; do \
+         [ -f "$pw" ] && node "$pw" install chromium; \
+       done \
+    && npm cache clean --force \
+    && rm -rf /root/.npm
+
+# The api-recon runtime harvester defaults to /usr/bin/chromium. Point it at the
+# Chromium build Playwright installed.
+RUN set -eux; \
+    CHROME_BIN="$(find /ms-playwright -path '*/chrome-linux*/chrome' -type f | head -n1)"; \
+    test -n "$CHROME_BIN"; \
+    ln -sf "$CHROME_BIN" /usr/bin/chromium; \
+    ln -sf "$CHROME_BIN" /usr/bin/chromium-browser; \
+    chmod -R a+rX /ms-playwright; \
+    "$CHROME_BIN" --version
+
+# Preinstall the api-recon skill's Node runtime from its lockfile (official
+# registry, integrity-checked, no lifecycle scripts) so the agent never has to
+# run `npm install` at runtime. runtime_harvest.js resolves it by the absolute
+# ARTEX_PUPPETEER_PATH below, so a node_modules/ in a scanned workspace cannot
+# shadow it.
+COPY skills/api-recon/scripts/package.json skills/api-recon/scripts/package-lock.json skills/api-recon/scripts/.npmrc /opt/api-recon-runtime/
+# jq guard: every resolved URL in the lockfile must be the official registry.
+# Parsing the JSON is robust to formatting (unlike a line grep). jq is installed
+# above.
+RUN cd /opt/api-recon-runtime \
+    && jq -e '[.packages[].resolved? // empty] | all(startswith("https://registry.npmjs.org/"))' package-lock.json > /dev/null \
+    && npm ci --ignore-scripts \
+    && npm cache clean --force \
+    && rm -rf /root/.npm
+
+WORKDIR /app
+COPY --from=go-builder /out/artex /app/artex
+COPY start.sh /app/start.sh
+COPY skills/ /app/skills/
+RUN chmod +x /app/artex /app/start.sh \
+    && mkdir -p /app/data /app/keys /app/.playwright \
+    && ln -sfn /app/keys/jwt.key /app/jwt.key \
+    && printf '%s\n' '{"browser":{"browserName":"chromium","launchOptions":{"args":["--no-sandbox"]}}}' > /app/.playwright/cli.config.json
+
+# Upstream runs as root; keep that for tool parity. compose adds
+# no-new-privileges and binds the console to loopback.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
+    PLAYWRIGHT_MCP_EXECUTABLE_PATH=/usr/bin/chromium \
+    NODE_PATH=/usr/local/lib/node_modules \
+    ARTEX_PUPPETEER_PATH=/opt/api-recon-runtime/node_modules/puppeteer-core \
+    TMPDIR=/tmp \
+    NORMA_RIPGREP_NO_INSTALL=1 \
+    NEXT_TELEMETRY_DISABLED=1
+
+VOLUME ["/app/data"]
+EXPOSE 8787 8788
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD curl -fsS http://127.0.0.1:8787/api/health || exit 1
+
+ENTRYPOINT ["/app/start.sh"]
+CMD ["-addr", ":8787", "-proxy", ":8788"]

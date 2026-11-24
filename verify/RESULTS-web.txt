@@ -1,0 +1,35 @@
+
+REVIEW - 10 changed literals in logic positions (confirm they are display text):
+  app/(main)/dashboard/page.tsx [jsx-attr sub]
+      before: "By type"
+      after:  "Nach Typ"
+  app/(main)/function/findings/_components/findings-table.tsx [jsx-attr successMessage]
+      before: "Detailed report copied"
+      after:  "Detaillierter Bericht kopiert"
+  app/(main)/function/findings/detail/page.tsx [jsx-attr successMessage]
+      before: "Detailed report copied"
+      after:  "Detaillierter Bericht kopiert"
+  app/(main)/function/findings/page.tsx [jsx-attr selectAllLabel]
+      before: "Select all on current page"
+      after:  "Alle auf aktueller Seite auswählen"
+  app/(main)/function/findings/page.tsx [jsx-attr selectAllLabel]
+      before: "Select all on this group's current page"
+      after:  "Alle auf aktueller Seite dieser Gruppe auswählen"
+  app/(main)/function/tasks/detail/_tabs/overview-tab.tsx [jsx-attr sub]
+      before: "frontier open"
+      after:  "Frontier offen"
+  app/(main)/function/tasks/detail/_tabs/overview-tab.tsx [jsx-attr sub]
+      before: "This task"
+      after:  "Diese Aufgabe"
+  app/(main)/function/tasks/detail/_tabs/overview-tab.tsx [jsx-attr sub]
+      before: "All intents in this task"
+      after:  "Alle Intents in dieser Aufgabe"
+  app/(main)/function/tasks/page.tsx [jsx-attr name]
+      before: "Uncategorized"
+      after:  "Ohne Kategorie"
+  components/transcript.tsx [comparison]
+      before: "Command"
+      after:  "Befehl"
+
+web files: 189 | syntax tree identical: 117 | only text changed: 72 (1672 string literals + JSX text) | new URLs: 0
+RESULT: PASS - syntax trees, identifiers, imports and URLs are unchanged; only display text differs.

@@ -1,0 +1,160 @@
+package selfupdate
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
+)
+
+// Enabled reports whether online self-update is compiled into this build.
+//
+// It is forced OFF in this fork and is a const, not a setting: no config key,
+// environment variable, or admin session can turn it back on without editing
+// and rebuilding the source. Every online entry point (FetchLatest, Stage)
+// checks it and refuses before touching the network, so this binary never
+// reaches a remote release feed. Re-enabling online update means flipping this
+// to true, re-pointing Repo at a trusted release source, and re-auditing the
+// download/verify path.
+const Enabled = false
+
+// ErrDisabled is returned by every online-update entry point while Enabled is
+// false.
+var ErrDisabled = errors.New("Online-Update deaktiviert: Lokaler Build überprüft oder lädt keine Remote-Versionen herunter")
+
+// Repo remains a fixed source identifier; online access is disabled above.
+// Keep the URL derived from it so a future reviewed source edit cannot leave
+// a second, stale release source behind.
+const Repo = "failsafe-security/artex"
+const latestURL = "https://api.github.com/repos/" + Repo + "/releases/latest"
+
+// allowedHosts 限定升级链路能访问的域名。配合下面的 checkRedirect，
+// 任何一跳被重定向到名单外的主机都会直接失败——这是防止 DNS 污染 / 中间人
+// 把二进制换掉的第一道闸门，第二道是 SHA256SUMS 比对。
+var allowedHosts = map[string]bool{
+	"api.github.com":                       true,
+	"github.com":                           true,
+	"objects.githubusercontent.com":        true, // release 资产实际落地的对象存储
+	"release-assets.githubusercontent.com": true,
+	"raw.githubusercontent.com":            true,
+}
+
+// Release 是 GitHub Release 里我们关心的字段。
+type Release struct {
+	TagName     string    `json:"tag_name"`
+	Name        string    `json:"name"`
+	Body        string    `json:"body"`
+	Draft       bool      `json:"draft"`
+	Prerelease  bool      `json:"prerelease"`
+	PublishedAt time.Time `json:"published_at"`
+	HTMLURL     string    `json:"html_url"`
+	Assets      []Asset   `json:"assets"`
+}
+
+// Asset 是 Release 上挂的一个文件。
+type Asset struct {
+	Name string `json:"name"`
+	URL  string `json:"browser_download_url"`
+	Size int64  `json:"size"`
+}
+
+// NewClient 构造一个只认 GitHub 域名的 HTTP 客户端。proxy 为空则直连。
+//
+// 刻意不复用默认 Transport：升级链路必须强制走 TLS 且校验证书，不能被别处
+// 设置的 InsecureSkipVerify 之类影响到。
+func NewClient(proxy string) *http.Client {
+	tr := &http.Transport{
+		ForceAttemptHTTP2:   true,
+		TLSHandshakeTimeout: 15 * time.Second,
+	}
+	if p := strings.TrimSpace(proxy); p != "" {
+		if pu, err := url.Parse(p); err == nil {
+			tr.Proxy = http.ProxyURL(pu)
+		}
+	}
+	return &http.Client{
+		Transport: tr,
+		Timeout:   30 * time.Minute, // 下载整包，不能按请求级超时卡死
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 10 {
+				return fmt.Errorf("Zu viele Weiterleitungen")
+			}
+			return checkURL(req.URL)
+		},
+	}
+}
+
+// checkURL 强制 https + 域名白名单。
+func checkURL(u *url.URL) error {
+	if u.Scheme != "https" {
+		return fmt.Errorf("Nicht-HTTPS-Adresse abgelehnt: %s", u.Scheme+"://"+u.Host)
+	}
+	if !allowedHosts[strings.ToLower(u.Hostname())] {
+		return fmt.Errorf("Nicht-GitHub-Domain abgelehnt: %s", u.Hostname())
+	}
+	return nil
+}
+
+// FetchLatest 查询最新正式版。
+//
+// Disabled in this fork: it returns ErrDisabled without making any network
+// request while Enabled is false.
+func FetchLatest(ctx context.Context, c *http.Client) (*Release, error) {
+	if !Enabled {
+		return nil, ErrDisabled
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, latestURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	if err := checkURL(req.URL); err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/vnd.github+json")
+	req.Header.Set("User-Agent", "artex-selfupdate")
+
+	resp, err := c.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("Zugriff auf GitHub fehlgeschlagen (globaler Proxy kann in den Systemeinstellungen konfiguriert werden): %w", err)
+	}
+	defer resp.Body.Close()
+
+	switch {
+	case resp.StatusCode == http.StatusForbidden, resp.StatusCode == http.StatusTooManyRequests:
+		// 未认证的 GitHub API 是每 IP 每小时 60 次，共用出口 IP 时很容易撞上。
+		return nil, fmt.Errorf("GitHub-API rate-limited (60 pro Stunde), bitte später erneut versuchen")
+	case resp.StatusCode == http.StatusNotFound:
+		return nil, fmt.Errorf("Repository %s nicht erreichbar oder noch keine stabile Version veröffentlicht", Repo)
+	case resp.StatusCode != http.StatusOK:
+		return nil, fmt.Errorf("GitHub gibt %d zurück", resp.StatusCode)
+	}
+
+	var rel Release
+	if err := json.NewDecoder(resp.Body).Decode(&rel); err != nil {
+		return nil, fmt.Errorf("Release-Parsing fehlgeschlagen: %w", err)
+	}
+	if strings.TrimSpace(rel.TagName) == "" {
+		return nil, fmt.Errorf("Release fehlt Tag")
+	}
+	return &rel, nil
+}
+
+// AssetName 返回当前平台对应的发布包名，与 build.sh 的 package_binary 保持一致：
+// artex-<版本>-<os>-<arch>.zip（版本号不带 v 前缀）。
+func AssetName(tag, goos, goarch string) string {
+	return fmt.Sprintf("artex-%s-%s-%s.zip", strings.TrimPrefix(tag, "v"), goos, goarch)
+}
+
+// FindAsset 在 Release 里按名字找资产。
+func (r *Release) FindAsset(name string) (Asset, bool) {
+	for _, a := range r.Assets {
+		if strings.EqualFold(a.Name, name) {
+			return a, true
+		}
+	}
+	return Asset{}, false
+}
