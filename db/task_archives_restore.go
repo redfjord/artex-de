@@ -211,18 +211,18 @@ WHERE archive.id=$1 FOR UPDATE OF archive,task`, archiveID).Scan(&taskID, &expID
 	categoryID, _ := jsonInt64(taskRow["category_id"])
 	if categoryID > 0 && !rowExists(tx, "task_categories", categoryID) {
 		taskRow["category_id"] = nil
-		warnings = append(warnings, fmt.Sprintf("Aufgabenkategorie %d gelöst, als unkategorisiert wiederhergestellt", categoryID))
+		warnings = append(warnings, fmt.Sprintf("Aufgabenkategorie %d fehlt, als unkategorisiert wiederhergestellt", categoryID))
 	}
 	companyID, _ := jsonInt64(taskRow["company_id"])
 	if companyID > 0 && !rowExists(tx, "companies", companyID) {
 		taskRow["company_id"] = nil
-		warnings = append(warnings, fmt.Sprintf("Aufgabenunternehmen %d gelöst, Unternehmensverbindung übersprungen", companyID))
+		warnings = append(warnings, fmt.Sprintf("Aufgabenunternehmen %d fehlt, Unternehmensverbindung übersprungen", companyID))
 	}
 	for _, key := range []string{"llm_profile_id", "active_llm_profile_id"} {
 		profileID, _ := jsonInt64(taskRow[key])
 		if profileID > 0 && !rowExists(tx, "llm_profiles", profileID) {
 			taskRow[key] = nil
-			warnings = append(warnings, fmt.Sprintf("LLM-Konfiguration %d gelöst, aus Aufgabenkonfiguration entfernt", profileID))
+			warnings = append(warnings, fmt.Sprintf("LLM-Konfiguration %d fehlt, aus Aufgabenkonfiguration entfernt", profileID))
 		}
 	}
 	if err := restoreExplorationStub(tx, snapshot.Tables["explorations"], expID); err != nil {
@@ -623,7 +623,7 @@ func restoreTaskScopes(tx *sql.Tx, raw json.RawMessage) ([]string, error) {
 	kept := make([]map[string]any, 0, len(rows))
 	for _, row := range rows {
 		if companyID, ok := jsonInt64(row["company_id"]); ok && companyID > 0 && !rowExists(tx, "companies", companyID) {
-			warnings = append(warnings, fmt.Sprintf("Unternehmen %d gelöst, zugehöriger Bereich übersprungen", companyID))
+			warnings = append(warnings, fmt.Sprintf("Unternehmen %d fehlt, zugehöriger Bereich übersprungen", companyID))
 			continue
 		}
 		kept = append(kept, row)
@@ -646,7 +646,7 @@ func restoreTaskLLMProfiles(tx *sql.Tx, raw json.RawMessage) ([]string, error) {
 	for _, row := range rows {
 		profileID, ok := jsonInt64(row["profile_id"])
 		if !ok || !rowExists(tx, "llm_profiles", profileID) {
-			warnings = append(warnings, fmt.Sprintf("LLM-Konfiguration %d gelöst, Konfigurationsketteneintrag übersprungen", profileID))
+			warnings = append(warnings, fmt.Sprintf("LLM-Konfiguration %d fehlt, Konfigurationsketteneintrag übersprungen", profileID))
 			continue
 		}
 		taskID, _ := jsonInt64(row["task_id"])

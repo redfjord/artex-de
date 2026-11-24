@@ -1,8 +1,9 @@
 # Sicherheitsnachweis ARTEX-DE
 
-**Behauptung:** ARTEX-DE enthält gegenüber FailSafe ARTEX `v0.3.15-safe` **keinen zusätzlichen
-oder veränderten Programmcode**. Geändert wurden ausschließlich Texte (Anzeige, Meldungen,
-Prompts, Kommentare) sowie die dazu passenden Test-Erwartungen.
+Der Go-Tokenvergleich mit FailSafe ARTEX `v0.3.15-safe` prüft auf veränderte Go-Logik.
+Für die Weboberfläche zeigt [`verify/ui-compatibility.patch`](verify/ui-compatibility.patch)
+die separat geprüften Funktionsänderungen. Der Syntaxbaumvergleich betrachtet danach den
+reinen Übersetzungsstand.
 
 Diese Behauptung ist nicht bloß versprochen, sondern **maschinell überprüfbar**. Alle Werkzeuge
 und Eingaben liegen im Repository; jeder kann den Nachweis mit einem Befehl selbst wiederholen:
@@ -17,7 +18,7 @@ und Eingaben liegen im Repository; jeder kann den Nachweis mit einem Befehl selb
 |---|---|
 | Go-Code: Token-Vergleich aller 335 `.go`-Dateien | **PASS**: Code token-identisch; 149 Dateien mit geänderten Text-Literalen (1805 Literale), 186 ohne geänderte Text-Literale |
 | Geänderte Go-Literale enthielten vorher Chinesisch | **PASS**: kein anderes Literal angefasst |
-| Web-UI: Syntaxbaum-Vergleich aller 189 TS/TSX-Dateien | **PASS**: Syntaxbäume identisch; 72 Dateien mit geändertem Anzeigetext, 117 komplett unverändert |
+| Web-UI: Syntaxbaum-Vergleich aller 189 TS/TSX-Dateien | **PASS** nach Rücknahme des dokumentierten UI-Anpassungspatches. 92 Dateien mit geändertem Text, 97 ohne Textänderung |
 | Neue Dateien / gelöschte Dateien im Code | **0 / 0** |
 | Neue URLs oder Domains in Texten | **0** (Go und Web) |
 | Abhängigkeits-, Build- und Laufzeitdateien | **byte-identisch** (`go.mod`, `go.sum`, `package.json`, `package-lock.json`, `Dockerfile.safe`, `docker-compose.safe.yml`, `start.sh`, `Makefile`, `.dockerignore`, `skills/`) |
@@ -55,16 +56,14 @@ die Prüfungen aus:
 
 ## Grenzen des Nachweises (ehrlich)
 
-- Bewiesen wird: **ARTEX-DE fügt gegenüber FailSafe ARTEX keinen Code hinzu.** Nicht bewiesen
-  wird, dass ARTEX selbst fehlerfrei oder harmlos ist. ARTEX ist ein Angriffswerkzeug für
+- Der Nachweis deckt die verglichenen Go- und Webdateien nach Rücknahme des UI-Anpassungspatches ab. Die Sicherheitsbewertung der Basis ist separat dokumentiert. ARTEX ist ein Angriffswerkzeug für
   autorisierte Tests und kann *bestimmungsgemäß* Befehle ausführen und Netzwerkverkehr erzeugen.
   Zur Sicherheit der Basis siehe FailSafes [Audit](audit/artex-v0.3.15-audit.md),
   [UPSTREAM.md](UPSTREAM.md) und [SECURITY.md](SECURITY.md).
 - Agenten-Prompts sind Text und wurden übersetzt. Text führt keinen Code aus, beeinflusst aber das
   **Verhalten der KI-Agenten**. Die deutschen Prompts wurden geprüft, das Verhalten kann sich
   dennoch leicht vom Original unterscheiden.
-- Die FailSafe-Basis wird aus dem beiliegenden Patch rekonstruiert. Wer der FailSafe-Basis selbst
-  nicht vertraut, kann sie zusätzlich mit `RuoJi6/ARTEX` Tag `v0.3.15`
+- Die rekonstruierten Go- und Webdateien werden samt Pfaden gegen `verify/reference-sha256.txt` geprüft. Die Prüfsumme stammt aus der ursprünglichen Vergleichsbasis. Die Herkunft dieser Basis lässt sich zusätzlich mit `RuoJi6/ARTEX` Tag `v0.3.15`
   (`a91b27feb7168c1486f827559bc48a589a920012`) vergleichen. Die dabei sichtbaren Unterschiede sind
   in [UPSTREAM.md](UPSTREAM.md) einzeln dokumentiert.
 
@@ -74,7 +73,7 @@ die Prüfungen aus:
 ARTEX (Autumn-27)
   └─ RuoJi6/ARTEX  Tag v0.3.15  (a91b27feb7168c1486f827559bc48a589a920012)
        └─ FailSafe ARTEX v0.3.15-safe   gehärtet & auditiert, dokumentiert in UPSTREAM.md / audit/
-            └─ ARTEX-DE                 nur Textübersetzung, Diff = verify/german-translation.patch
+            └─ ARTEX-DE                 Übersetzung plus dokumentierte UI-Anpassungen
 ```
 
 ## Manuelle Prüfung der Übersetzung
@@ -123,11 +122,12 @@ cd artex-de
 
 Das Skript arbeitet in vier Schritten:
 
-1. Es rekonstruiert die FailSafe-Basis in einem eigenen temporären Verzeichnis, indem es
-   `verify/german-translation.patch` rückwärts anwendet. Das Verzeichnis wird beim Beenden entfernt.
+1. Es kopiert den Quellbaum in ein temporäres Verzeichnis und nimmt dort den dokumentierten
+   UI-Anpassungspatch zurück. Aus dieser Kopie rekonstruiert es per Übersetzungspatch die
+   FailSafe-Basis und vergleicht ihre Go- und Webdateien mit der festgelegten Prüfsumme.
 2. Es führt den Go-Tokenvergleich aus.
 3. Es installiert per `npm ci --ignore-scripts` exakt die im Lockfile festgelegten Pakete und führt
-   den TypeScript-Syntaxbaum-Vergleich aus.
+   den TypeScript-Syntaxbaum-Vergleich auf dem reinen Übersetzungsstand aus.
 4. Es sucht im Quelltext nach den Indikatoren des bekannten Backdoors.
 
 Wer den Werkzeugen selbst nicht traut: Beide Prüfer sind kurz und nutzen nur die
@@ -140,11 +140,14 @@ Zeile.
 SHA-256 der Nachweisdateien auf diesem Stand:
 
 ```
-125eb369f4115ffdb7c27e5e0479e57b65eb893e3b40123d8f5f7240fe0e94ad  verify/german-translation.patch
+ab95c3aa1b9851c4951d9df3f0e9104387a5db8a755c7760c801b204397aa8da  verify/german-translation.patch
 5753e1f9a21db1c6ec7118abc01ca789b00aff491148196bb215cc2bac332623  verify/go-tokens/main.go
 456fd6f76f8e2d54146b16642149066d38c7603b3e528b77c660769bac06e2ae  verify/go-tokens/go.mod
 27ea817f034e8178a262475872cfa3b3d8b49096829b6a4b88d1969259e3b79b  verify/ts-ast-compare.mjs
-6a95e2890031a47abf256ce5949d642b19453082ad3457690886b0869936318b  verify/run-verification.sh
+847577260f43b9efbd46002ff0c5a4e99cfe956362b173e4662b952925513c72  verify/run-verification.sh
+3f3616e8fa606e5967b8f47729247548389901ae03db65540e26ef7bd64b8afc  verify/ui-compatibility.patch
+e6fc1352d3563ae359dfef35a7f8c862869d586537dee291d3cc1fb97a0cbe6e  verify/reference-sha256.txt
+c2659860c29a92a685d8bbdc45d02217f69ee08036fc818a7bd455f76f168704  verify/source-digest.mjs
 ```
 
 ### Gebautes Binary (Referenz-Build)

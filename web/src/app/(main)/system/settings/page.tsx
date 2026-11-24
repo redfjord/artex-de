@@ -136,7 +136,7 @@ export default function SystemSettingsPage() {
       })
       .catch((e) => {
         setAgentTrafficBinding(!v);
-        toast.error(`Failed to save: ${(e as Error).message}`);
+        toast.error(`Speichern fehlgeschlagen: ${(e as Error).message}`);
       })
       .finally(() => setSaving(false));
   };
@@ -159,7 +159,7 @@ export default function SystemSettingsPage() {
       })
       .catch((e) => {
         setNoaCompaction(!v); // revert on failure
-        toast.error(`Failed to save: ${(e as Error).message}`);
+        toast.error(`Speichern fehlgeschlagen: ${(e as Error).message}`);
       });
   };
 
@@ -482,7 +482,7 @@ export default function SystemSettingsPage() {
                   }}
                 >
                   <SelectTrigger className="w-48 shrink-0">
-                    <SelectValue placeholder="Select a source" />
+                    <SelectValue placeholder="Quelle auswählen" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="ddgs">DuckDuckGo (ddgs · kostenlos, kein Schlüssel)</SelectItem>
@@ -690,9 +690,9 @@ export default function SystemSettingsPage() {
               Chat-Eingabe-Sendetaste
             </CardTitle>
             <CardDescription>
-              Shared by the chat page and the main agent session input on the task detail page; takes effect immediately with no save needed.
+              Gilt für die Chatseite und das Eingabefeld der Hauptsitzung in den Aufgabendetails. Änderungen gelten sofort.
               <br />
-              This preference is <b>stored only in this browser</b> and is not synced with your account; you will need to set it again after switching browsers or clearing site data.
+              Diese Einstellung wird <b>nur in diesem Browser gespeichert</b>. Nach einem Browserwechsel oder dem Löschen der Websitedaten müssen Sie sie erneut festlegen.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-between gap-4">

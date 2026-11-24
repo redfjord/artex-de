@@ -395,7 +395,7 @@ export default function AssetsPage() {
                               setCompanyDeleteTarget(c);
                               setCompanyDeleteAssets(false);
                             }}
-                            aria-label={`Delete company ${c.name}`}
+                            aria-label={`Unternehmen ${c.name} löschen`}
                           >
                             <Trash2Icon className="size-3.5" />
                           </Button>
@@ -494,7 +494,7 @@ export default function AssetsPage() {
                     size="icon"
                     className="size-7 text-muted-foreground hover:text-destructive"
                     onClick={() => openDelete([a.id])}
-                    aria-label={`Delete asset ${a.ip || a.id}`}
+                    aria-label={`Asset löschen: ${a.ip || a.id}`}
                   >
                     <Trash2Icon className="size-3.5" />
                   </Button>
@@ -576,7 +576,7 @@ export default function AssetsPage() {
                     size="icon"
                     className="size-7 text-muted-foreground hover:text-destructive"
                     onClick={() => openDelete([a.id])}
-                    aria-label={`Delete asset ${a.app_name || a.id}`}
+                    aria-label={`Asset löschen: ${a.app_name || a.id}`}
                   >
                     <Trash2Icon className="size-3.5" />
                   </Button>
@@ -671,7 +671,7 @@ export default function AssetsPage() {
                       size="icon"
                       className="size-7 text-muted-foreground hover:text-destructive"
                       onClick={() => openDelete([a.id])}
-                      aria-label={`Delete asset ${a.url || a.id}`}
+                      aria-label={`Asset löschen: ${a.url || a.id}`}
                     >
                       <Trash2Icon className="size-3.5" />
                     </Button>
@@ -723,7 +723,7 @@ export default function AssetsPage() {
                     size="icon"
                     className="size-7 text-muted-foreground hover:text-destructive"
                     onClick={() => openDelete([a.id])}
-                    aria-label={`Delete asset ${a.url || a.id}`}
+                    aria-label={`Asset löschen: ${a.url || a.id}`}
                   >
                     <Trash2Icon className="size-3.5" />
                   </Button>
@@ -1084,7 +1084,7 @@ function EditScopeDialog({ company, onSaved }: { company: Company; onSaved: () =
       setOpen(false);
       onSaved();
     } catch (e) {
-      toast.error(`Save failed: ${String((e as Error)?.message ?? e)}`);
+      toast.error(`Speichern fehlgeschlagen: ${String((e as Error)?.message ?? e)}`);
     } finally {
       setBusy(false);
     }
@@ -1167,7 +1167,7 @@ function AppendScopeDialog({ company, onSaved }: { company: Company; onSaved: ()
       setOpen(false);
       onSaved();
     } catch (e) {
-      toast.error(`Save failed: ${String((e as Error)?.message ?? e)}`);
+      toast.error(`Speichern fehlgeschlagen: ${String((e as Error)?.message ?? e)}`);
     } finally {
       setBusy(false);
     }

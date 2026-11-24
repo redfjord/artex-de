@@ -90,7 +90,7 @@ export function TrafficEvidenceViewer({
               <TabsContent key={side} value={side}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-xs text-muted-foreground">
-                    Inhalt {detail[side].total.toLocaleString()} Bytes{detail[side].truncated ? " · Vorschau" : ""}
+                    Inhalt {detail[side].total.toLocaleString("de-DE")} Bytes{detail[side].truncated ? " · Vorschau" : ""}
                   </span>
                   <Button
                     variant="outline"

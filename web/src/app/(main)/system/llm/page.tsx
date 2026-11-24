@@ -84,14 +84,14 @@ function healthOf(p: LLMProfile, m?: LLMPoolMember): Health {
   }
   if (m?.state === "tripped") {
     return {
-      label: m.cooldown_secs > 0 ? `Tripped · ${cooldownText(m.cooldown_secs)}` : "Ausgelöst",
+      label: m.cooldown_secs > 0 ? `Ausgelöst · ${cooldownText(m.cooldown_secs)}` : "Ausgelöst",
       cls: "border-destructive/50 text-destructive",
       hint: m.last_error,
     };
   }
   if (m?.state === "degraded") {
     return {
-      label: `Degraded · ${m.fails} failures`,
+      label: `Beeinträchtigt · Fehler: ${m.fails}`,
       cls: "border-amber-500/50 text-amber-600 dark:text-amber-400",
       hint: m.last_error,
     };
@@ -165,7 +165,7 @@ function PoolSheet({
             <ZapIcon className="size-4" /> LLM-Polling · Failover
           </SheetTitle>
           <SheetDescription>
-            When enabled, Agents with <b>no model specified</b> automatically switch to the next
+            When enabled, Agents with <b>Kein Modell angegeben</b> automatically switch to the next
             profile when the current one is unavailable (insufficient balance / invalid Key / rate
             limited / service error).
           </SheetDescription>
@@ -591,7 +591,7 @@ function ProfileSheet({
               onChange={(e) => setSessionHeaderKey(e.target.value)}
             />
             <p className="text-muted-foreground text-xs">
-              Once a header name is set, every request carries this HTTP header, with its value automatically set to the <b>current session's session id</b> (chat sessions like
+              Once a header name is set, every request carries this HTTP header, with its value automatically set to the <b>ID der aktuellen Sitzung</b> (chat sessions like
               conv-12, workers like exp3-worker-i87). Use it for gateways that do prompt caching / sticky routing based on a session-id header; it stays stable across turns of the same session and differs between sessions. Leave empty to not send it.
             </p>
           </div>

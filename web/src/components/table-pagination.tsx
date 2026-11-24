@@ -83,7 +83,7 @@ export function TablePagination({
                 size="icon-sm"
                 disabled={safePage === 1}
                 onClick={() => onPageChange(safePage - 1)}
-                aria-label="Previous page"
+                aria-label="Vorherige Seite"
               >
                 <ChevronLeftIcon className="size-4" />
               </Button>
@@ -112,7 +112,7 @@ export function TablePagination({
                 size="icon-sm"
                 disabled={safePage === totalPages}
                 onClick={() => onPageChange(safePage + 1)}
-                aria-label="Next page"
+                aria-label="Nächste Seite"
               >
                 <ChevronRightIcon className="size-4" />
               </Button>

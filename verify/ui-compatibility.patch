@@ -1,0 +1,199 @@
+diff --git a/web/src/app/(main)/function/tasks/detail/_tabs/sessions-tab.tsx b/web/src/app/(main)/function/tasks/detail/_tabs/sessions-tab.tsx
+index 750bc9e..f992b2a 100644
+--- a/web/src/app/(main)/function/tasks/detail/_tabs/sessions-tab.tsx
++++ b/web/src/app/(main)/function/tasks/detail/_tabs/sessions-tab.tsx
+@@ -1639,9 +1639,9 @@ export function SessionsTab({ taskId }: { taskId: string }) {
+                   </div>
+                 </TooltipTrigger>
+                 <TooltipContent>
+-                  Eingabe {taskTokens.input_tokens.toLocaleString()} · Output {taskTokens.output_tokens.toLocaleString()} ·
+-                  Cache-Lese {taskTokens.cache_read_tokens.toLocaleString()} · Cache-Schreibe{" "}
+-                  {taskTokens.cache_write_tokens.toLocaleString()}
++                  Eingabe {taskTokens.input_tokens.toLocaleString("de-DE")} · Output {taskTokens.output_tokens.toLocaleString("de-DE")} ·
++                  Cache-Lese {taskTokens.cache_read_tokens.toLocaleString("de-DE")} · Cache-Schreibe{" "}
++                  {taskTokens.cache_write_tokens.toLocaleString("de-DE")}
+                 </TooltipContent>
+               </Tooltip>
+             )}
+@@ -1818,10 +1818,10 @@ export function SessionsTab({ taskId }: { taskId: string }) {
+                       </span>
+                     </TooltipTrigger>
+                     <TooltipContent>
+-                      Eingabe {activeTokens.input_tokens.toLocaleString()} · Output{" "}
+-                      {activeTokens.output_tokens.toLocaleString()} · Cache read{" "}
+-                      {activeTokens.cache_read_tokens.toLocaleString()} · Cache-Schreibe{" "}
+-                      {activeTokens.cache_write_tokens.toLocaleString()}
++                      Eingabe {activeTokens.input_tokens.toLocaleString("de-DE")} · Output{" "}
++                      {activeTokens.output_tokens.toLocaleString("de-DE")} · Cache read{" "}
++                      {activeTokens.cache_read_tokens.toLocaleString("de-DE")} · Cache-Schreibe{" "}
++                      {activeTokens.cache_write_tokens.toLocaleString("de-DE")}
+                     </TooltipContent>
+                   </Tooltip>
+                 )}
+diff --git a/web/src/app/(main)/function/tasks/page.tsx b/web/src/app/(main)/function/tasks/page.tsx
+index e317090..d951c84 100644
+--- a/web/src/app/(main)/function/tasks/page.tsx
++++ b/web/src/app/(main)/function/tasks/page.tsx
+@@ -1605,7 +1605,7 @@ function archiveDate(value?: string): string {
+   if (!value) return "—";
+   const date = new Date(value);
+   if (Number.isNaN(date.getTime())) return "—";
+-  return date.toLocaleString();
++  return date.toLocaleString("de-DE");
+ }
+ 
+ function ArchiveDeleteDialog({
+@@ -1628,7 +1628,7 @@ function ArchiveDeleteDialog({
+         <AlertDialogHeader>
+           <AlertDialogTitle>Aufgabenarchive endgültig löschen ({archives.length})?</AlertDialogTitle>
+           <AlertDialogDescription className="[overflow-wrap:anywhere]">
+-            Dadurch werden rund {formatArchiveBytes(bytes)} an Archivpaketen und {rows.toLocaleString()} zugehörige Datensicherungen endgültig gelöscht. Das lässt sich nicht rückgängig machen.
++            Dadurch werden rund {formatArchiveBytes(bytes)} an Archivpaketen und {rows.toLocaleString("de-DE")} zugehörige Datensicherungen endgültig gelöscht. Das lässt sich nicht rückgängig machen.
+           </AlertDialogDescription>
+         </AlertDialogHeader>
+         <AlertDialogFooter>
+@@ -1687,7 +1687,7 @@ function TaskArchivesPanel({ onChanged }: { onChanged: () => void }) {
+         let restored = false;
+         states.forEach((state, index) => {
+           if (state.status !== "rejected" || !(state.reason instanceof Error)) return;
+-          if (!state.reason.message.includes("归档不存在")) return;
++          if (!("status" in state.reason) || state.reason.status !== 404) return;
+           pendingRestoreIDs.current.delete(pending[index]);
+           restored = true;
+         });
+@@ -1942,7 +1942,7 @@ function TaskArchivesPanel({ onChanged }: { onChanged: () => void }) {
+                     >
+                       {archiveCompressionLabel(archive)}
+                     </TableCell>
+-                    <TableCell className="text-xs tabular-nums">{archiveDataTotal(archive).toLocaleString()}</TableCell>
++                    <TableCell className="text-xs tabular-nums">{archiveDataTotal(archive).toLocaleString("de-DE")}</TableCell>
+                     <TableCell>
+                       <div className="flex min-w-0 flex-col gap-1.5">
+                         <ArchiveStateBadge state={archive.state} />
+diff --git a/web/src/app/(main)/system/intercept/page.tsx b/web/src/app/(main)/system/intercept/page.tsx
+index 680b909..450c1e7 100644
+--- a/web/src/app/(main)/system/intercept/page.tsx
++++ b/web/src/app/(main)/system/intercept/page.tsx
+@@ -314,7 +314,7 @@ function JudgeCard() {
+               </Button>
+             </div>
+             <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+-              <JudgeStat label="Freigabe-Aufrufe" value={usage.calls.toLocaleString()} />
++              <JudgeStat label="Freigabe-Aufrufe" value={usage.calls.toLocaleString("de-DE")} />
+               <JudgeStat label="Eingabe-Token" value={fmtTokens(usage.input_tokens)} />
+               <JudgeStat label="Ausgabe-Token" value={fmtTokens(usage.output_tokens)} />
+               <JudgeStat label="Cache-Lesevorgänge" value={fmtTokens(usage.cache_read_tokens)} />
+diff --git a/web/src/components/side-question-workspace.tsx b/web/src/components/side-question-workspace.tsx
+index 69f4cc2..946a11f 100644
+--- a/web/src/components/side-question-workspace.tsx
++++ b/web/src/components/side-question-workspace.tsx
+@@ -92,7 +92,7 @@ function SidePanel({
+         {side.snapshot ? (
+           <>
+             <p>{side.snapshot.model.model}</p>
+-            <p>Kontext aktualisiert am {new Date(side.snapshot.captured_at).toLocaleString()}</p>
++            <p>Kontext aktualisiert am {new Date(side.snapshot.captured_at).toLocaleString("de-DE")}</p>
+           </>
+         ) : (
+           "Fragen sind verfügbar, nachdem der Haupt-Agent einmal ausgeführt wurde"
+@@ -127,8 +127,8 @@ function SidePanel({
+               <div className="flex flex-wrap items-center gap-2 text-muted-foreground text-xs">
+                 <Badge variant="secondary">{status[item.status]}</Badge>
+                 <span className="truncate">{item.model.model}</span>
+-                <time dateTime={item.snapshot_at} title={new Date(item.snapshot_at).toLocaleString()}>
+-                  Kontext {new Date(item.snapshot_at).toLocaleTimeString()}
++                <time dateTime={item.snapshot_at} title={new Date(item.snapshot_at).toLocaleString("de-DE")}>
++                  Kontext {new Date(item.snapshot_at).toLocaleTimeString("de-DE")}
+                 </time>
+               </div>
+               {item.context?.estimated_input_tokens != null && (
+diff --git a/web/src/components/traffic-evidence-viewer.tsx b/web/src/components/traffic-evidence-viewer.tsx
+index 6bc94c6..9870542 100644
+--- a/web/src/components/traffic-evidence-viewer.tsx
++++ b/web/src/components/traffic-evidence-viewer.tsx
+@@ -90,7 +90,7 @@ export function TrafficEvidenceViewer({
+               <TabsContent key={side} value={side}>
+                 <div className="flex flex-wrap items-center justify-between gap-2">
+                   <span className="text-xs text-muted-foreground">
+-                    Inhalt {detail[side].total.toLocaleString()} Bytes{detail[side].truncated ? " · Vorschau" : ""}
++                    Inhalt {detail[side].total.toLocaleString("de-DE")} Bytes{detail[side].truncated ? " · Vorschau" : ""}
+                   </span>
+                   <Button
+                     variant="outline"
+diff --git a/web/src/components/transcript.tsx b/web/src/components/transcript.tsx
+index d25105c..f9b8565 100644
+--- a/web/src/components/transcript.tsx
++++ b/web/src/components/transcript.tsx
+@@ -267,7 +267,7 @@ function InterceptCard({
+             <div className="flex items-center gap-1.5 font-medium">
+               <span className="text-amber-700 dark:text-amber-400">Genehmigungsanfrage</span>
+               <code className="rounded bg-amber-100 dark:bg-amber-900/50 px-1 font-mono text-amber-800 dark:text-amber-300">
+-                {toolName}
++                {pending?.tool_name || (typeof detail?.tool === "string" ? detail.tool : toolName)}
+               </code>
+               {pendingId && (
+                 <span className="text-muted-foreground">#{pendingId}</span>
+diff --git a/web/src/components/ui/chart.tsx b/web/src/components/ui/chart.tsx
+index 7c2dc84..7ff369e 100644
+--- a/web/src/components/ui/chart.tsx
++++ b/web/src/components/ui/chart.tsx
+@@ -255,7 +255,7 @@ function ChartTooltipContent({
+                       {item.value != null && (
+                         <span className="font-mono font-medium text-foreground tabular-nums">
+                           {typeof item.value === "number"
+-                            ? item.value.toLocaleString()
++                            ? item.value.toLocaleString("de-DE")
+                             : String(item.value)}
+                         </span>
+                       )}
+diff --git a/web/src/lib/api.ts b/web/src/lib/api.ts
+index d659bea..e5c8ab6 100644
+--- a/web/src/lib/api.ts
++++ b/web/src/lib/api.ts
+@@ -111,6 +111,24 @@ function getToken(): string | null {
+   return localStorage.getItem("artex_token");
+ }
+ 
++const localizedHttpErrors = new Map([
++  ["agent not found", "Agent nicht gefunden"],
++  ["company not found", "Unternehmen nicht gefunden"],
++  ["conversation not found", "Konversation nicht gefunden"],
++  ["description is required", "Eine Beschreibung ist erforderlich"],
++  ["file not found", "Datei nicht gefunden"],
++  ["finding not found", "Fund nicht gefunden"],
++  ["invalid id", "Ungültige ID"],
++  ["invalid JSON", "Ungültiges JSON"],
++  ["invalid skill name", "Ungültiger Skillname"],
++  ["not found", "Nicht gefunden"],
++  ["skill already exists", "Der Skill existiert bereits"],
++  ["skill not found", "Skill nicht gefunden"],
++  ["task category not found", "Aufgabenkategorie nicht gefunden"],
++  ["task not found", "Aufgabe nicht gefunden"],
++  ["task template not found", "Aufgabenvorlage nicht gefunden"],
++]);
++
+ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
+   if (MOCK) return mockHandle<T>(init?.method ?? "GET", path, init?.body ?? null);
+   const token = getToken();
+@@ -141,7 +159,7 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
+     } catch {
+       // Keep the status-based fallback for empty or non-JSON error responses.
+     }
+-    throw new Error(message);
++    throw Object.assign(new Error(localizedHttpErrors.get(message) ?? message), { status: r.status });
+   }
+   if (r.status === 204) return undefined as T;
+   return r.json();
+diff --git a/web/src/lib/mock/handler.ts b/web/src/lib/mock/handler.ts
+index e1a2746..5d6c4b9 100644
+--- a/web/src/lib/mock/handler.ts
++++ b/web/src/lib/mock/handler.ts
+@@ -1084,7 +1084,7 @@ function route(m: string, path: string, seg: string[], q: URLSearchParams, b: Re
+   }
+   if (seg[0] === "task-archives" && seg.length === 2 && m === "GET") {
+     const archive = mockTaskArchives.find((item) => item.id === Number(seg[1]));
+-    if (!archive) throw new Error("Archive not found");
++    if (!archive) throw Object.assign(new Error("Archiv nicht gefunden"), { status: 404 });
+     return publicMockTaskArchive(archive);
+   }
+   if (seg[0] === "task-archives" && seg[2] === "restore" && seg.length === 3 && m === "POST") {

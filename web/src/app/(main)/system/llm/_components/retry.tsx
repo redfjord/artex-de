@@ -240,10 +240,9 @@ export function ProfileRetryFields({
   return (
     <div className="grid gap-3 rounded-lg border p-3">
       <div className="grid gap-0.5">
-        <Label className="text-sm">Retry override</Label>
+        <Label className="text-sm">Wiederholungen für dieses Profil</Label>
         <p className="text-muted-foreground text-xs">
-          Applies only to this profile, overriding the global defaults under "Retry and backoff". Empty in any field = follow global; attempts -1 = disable this retry layer;
-          a set interval replaces exponential backoff with a fixed interval. The breaker and intent rerun are process-wide and can only be adjusted on the global page.
+          Diese Einstellungen gelten nur für dieses Profil. Leere Felder übernehmen die globalen Werte unter „Wiederholungen und Wartezeiten“. Mit −1 Versuchen wird die jeweilige Wiederholungsstufe deaktiviert. Ein festes Intervall ersetzt die exponentielle Wartezeit. Die Unterbrechung bei Fehlern und das Wiederholen von Absichten lassen sich nur global einstellen.
         </p>
       </div>
       {(["connect", "empty", "stream"] as const).map((k) => (

@@ -413,7 +413,7 @@ function DraftChat({
       const r = await api.chatUpload("session", `conv-${c.id}`, files);
       onStarted(c, { input, attachments: r.attachments });
     } catch (e) {
-      toast.error("Upload failed: " + (e as Error).message);
+      toast.error("Hochladen fehlgeschlagen: " + (e as Error).message);
       setUploading(false);
     }
   }
@@ -716,7 +716,7 @@ function ChatView({
       const r = await api.chatUpload("session", `conv-${conv.id}`, files);
       setAttachments((prev) => [...prev, ...r.attachments]);
     } catch (e) {
-      toast.error("Upload failed: " + (e as Error).message);
+      toast.error("Hochladen fehlgeschlagen: " + (e as Error).message);
     } finally {
       setUploading(false);
     }
@@ -897,7 +897,7 @@ const ConversationItem = React.memo(function ConversationItem({
         <Checkbox
           checked={selectedForDelete}
           onCheckedChange={(checked) => onSelectedForDeleteChange(conv.id, checked === true)}
-          aria-label={`Select conversation "${conv.title || "Neue Konversation"}"`}
+          aria-label={`Konversation „${conv.title || "Neue Konversation"}“ auswählen`}
           className="ml-1 shrink-0"
         />
       )}
@@ -924,7 +924,7 @@ const ConversationItem = React.memo(function ConversationItem({
           type="button"
           onClick={() => onSelect(conv.id)}
           onDoubleClick={() => onStartRename(conv)}
-          title="Double-click to rename"
+          title="Zum Umbenennen doppelklicken"
           className="min-w-0 flex-1 rounded-md px-2 py-1.5 text-left"
         >
           <div className="flex min-w-0 items-center gap-1.5">
@@ -946,7 +946,7 @@ const ConversationItem = React.memo(function ConversationItem({
               </>
             )}
             <span className="shrink-0">
-              {new Date(conv.created_at).toLocaleDateString("zh-CN", {
+              {new Date(conv.created_at).toLocaleDateString("de-DE", {
                 month: "numeric",
                 day: "numeric",
                 hour: "2-digit",
@@ -1211,7 +1211,7 @@ export default function ChatPage() {
     if (agentFilter !== null) keys.add(agentFilter);
     return [...keys]
       .map((key) => ({ key, name: agentByKey.get(key)?.name || key, count: counts.get(key) ?? 0 }))
-      .sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
+      .sort((a, b) => a.name.localeCompare(b.name, "de-DE"));
   }, [convs, chatAgents, agentByKey, agentFilter]);
   const conversationCountLabel =
     agentFilter === null ? `${convs.length} insgesamt` : `${filteredConversations.length} / ${convs.length}`;
@@ -1362,7 +1362,7 @@ export default function ChatPage() {
               onValueChange={(value) => changeAgentFilter(value === "all" ? null : value.slice(6))}
               disabled={bulkDeleting}
             >
-              <SelectTrigger size="sm" className="w-full min-w-0" aria-label="Filter conversations by agent">
+              <SelectTrigger size="sm" className="w-full min-w-0" aria-label="Konversationen nach Agent filtern">
                 <Bot />
                 <SelectValue placeholder="Alle Agenten" />
               </SelectTrigger>
@@ -1545,7 +1545,7 @@ export default function ChatPage() {
       <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete the {selectedConversationCount} selected conversations?</AlertDialogTitle>
+            <AlertDialogTitle>Ausgewählte Konversationen löschen ({selectedConversationCount})?</AlertDialogTitle>
             Konversationsnachrichten und Ausführungsprotokolle werden ebenfalls gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.
           </AlertDialogHeader>
           <AlertDialogFooter>

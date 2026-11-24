@@ -295,7 +295,7 @@ export function AgentEditor({ agentKey, onSaved }: { agentKey: string; onSaved?:
                         <SelectItem value="__follow__">Aufgabe / global aktive Konfiguration folgen</SelectItem>
                         {llmProfiles.map((p) => (
                           <SelectItem key={p.id} value={String(p.id)}>
-                            {p.name} ({p.model}){p.is_default ? " · default" : ""}
+                            {p.name} ({p.model}){p.is_default ? " · Standard" : ""}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -396,7 +396,7 @@ export function AgentEditor({ agentKey, onSaved }: { agentKey: string; onSaved?:
               <DialogContent className="sm:max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Gerenderte Vorschau</DialogTitle>
-                  <DialogDescription>All {`{{.Var}}`} placeholders were replaced by the backend with sample values.</DialogDescription>
+                  <DialogDescription>Alle {`{{.Var}}`} placeholders were replaced by the backend with sample values.</DialogDescription>
                 </DialogHeader>
                 <div className="max-h-[60vh] overflow-auto rounded-md border bg-muted/30 p-3">
                   <Markdown text={preview} />
@@ -423,7 +423,7 @@ export function AgentEditor({ agentKey, onSaved }: { agentKey: string; onSaved?:
                   <span className="text-muted-foreground truncate flex-1">{ver.note}</span>
                   {ver.ts && (
                     <span className="text-muted-foreground/60 shrink-0 tabular-nums">
-                      {new Date(ver.ts).toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                      {new Date(ver.ts).toLocaleDateString("de-DE", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
                     </span>
                   )}
                   <Button variant="ghost" size="icon-sm" className="size-6 shrink-0" onClick={() => setViewVer(ver)}>
@@ -456,7 +456,7 @@ export function AgentEditor({ agentKey, onSaved }: { agentKey: string; onSaved?:
                   {viewVer?.note || "(keine Notiz)"}
                   {viewVer?.ts && (
                     <span className="ml-2 text-muted-foreground/60">
-                      {new Date(viewVer.ts).toLocaleString("zh-CN")}
+                      {new Date(viewVer.ts).toLocaleString("de-DE")}
                     </span>
                   )}
                 </DialogDescription>

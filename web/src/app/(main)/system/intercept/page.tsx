@@ -288,7 +288,7 @@ function JudgeCard() {
           <div>
             <p className="text-sm font-semibold leading-tight">Modell-Fallback-Freigabe</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Only commands that are inside the <span className="font-medium text-foreground">intercept scope</span> and <span className="font-medium text-foreground">match no intercept rule</span> are semantically judged by the model (allow / send to human / deny)
+              Das Modell bewertet nur Befehle, die <span className="font-medium text-foreground">im Prüfbereich liegen</span> und <span className="font-medium text-foreground">auf keine Freigaberegel passen</span>. Es kann sie zulassen, zur manuellen Prüfung vorlegen oder ablehnen.
             </p>
           </div>
         </div>
@@ -314,7 +314,7 @@ function JudgeCard() {
               </Button>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-              <JudgeStat label="Freigabe-Aufrufe" value={usage.calls.toLocaleString()} />
+              <JudgeStat label="Freigabe-Aufrufe" value={usage.calls.toLocaleString("de-DE")} />
               <JudgeStat label="Eingabe-Token" value={fmtTokens(usage.input_tokens)} />
               <JudgeStat label="Ausgabe-Token" value={fmtTokens(usage.output_tokens)} />
               <JudgeStat label="Cache-Lesevorgänge" value={fmtTokens(usage.cache_read_tokens)} />

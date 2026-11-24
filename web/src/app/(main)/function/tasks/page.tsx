@@ -715,7 +715,7 @@ export default function TasksPage() {
     async (action: "pause" | "resume", ids: string[]) => {
       if (ids.length === 0 || batchControlling) return;
       if (ids.length > 100) {
-        toast.error("You can control at most 100 tasks at a time");
+        toast.error("Sie können höchstens 100 Aufgaben gleichzeitig bearbeiten");
         return;
       }
       setBatchControlling(action);
@@ -755,7 +755,7 @@ export default function TasksPage() {
       const ids = [...selectedIds];
       if (ids.length === 0 || movingCategory) return;
       if (ids.length > 100) {
-        toast.error("You can change the category of at most 100 tasks at a time");
+        toast.error("Sie können die Kategorie für höchstens 100 Aufgaben gleichzeitig ändern");
         return;
       }
       setMovingCategory(true);
@@ -777,7 +777,7 @@ export default function TasksPage() {
         }
         refreshCategoriesAndTasks();
       } catch (error) {
-        toast.error(`Failed to change category: ${(error as Error).message}`);
+        toast.error(`Kategorie konnte nicht geändert werden: ${(error as Error).message}`);
       } finally {
         setMovingCategory(false);
       }
@@ -807,7 +807,7 @@ export default function TasksPage() {
                   <button
                     type="button"
                     onClick={() => setQuery("")}
-                    aria-label="Clear search"
+                    aria-label="Suche zurücksetzen"
                     className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
                   >
                     <XIcon className="size-4" />
@@ -866,7 +866,7 @@ export default function TasksPage() {
                       ) : (
                         <PauseIcon data-icon="inline-start" />
                       )}
-                      Pause {pausableTaskIDs.length}
+                      Pausieren ({pausableTaskIDs.length})
                     </Button>
                   )}
                   {resumableTaskIDs.length > 0 && (
@@ -881,7 +881,7 @@ export default function TasksPage() {
                       ) : (
                         <PlayIcon data-icon="inline-start" />
                       )}
-                      Resume {resumableTaskIDs.length}
+                      Fortsetzen ({resumableTaskIDs.length})
                     </Button>
                   )}
                   {archivableTaskIDs.length > 0 && (
@@ -936,7 +936,7 @@ export default function TasksPage() {
                       <Checkbox
                         checked={headerChecked}
                         onCheckedChange={(checked) => toggleSelectedPage(checked === true)}
-                        aria-label="Select all tasks on this page"
+                        aria-label="Alle Aufgaben auf dieser Seite auswählen"
                       />
                     </TableHead>
                     <SortableTaskHead
@@ -1192,7 +1192,7 @@ const TaskRow = React.memo(function TaskRow({
         <Checkbox
           checked={selected}
           onCheckedChange={(checked) => onSelectedChange(task.id, checked === true)}
-          aria-label={`Select task ${task.id}`}
+          aria-label={`Aufgabe ${task.id} auswählen`}
         />
       </TableCell>
       <TableCell>
@@ -1273,7 +1273,7 @@ const TaskRow = React.memo(function TaskRow({
         className="text-right text-xs whitespace-nowrap tabular-nums"
         title={
           task.tokens
-            ? `Input ${task.tokens.input_tokens} · Cache ${task.tokens.cache_read_tokens} · Output ${task.tokens.output_tokens}`
+            ? `Eingabe ${task.tokens.input_tokens} · Cache ${task.tokens.cache_read_tokens} · Ausgabe ${task.tokens.output_tokens}`
             : undefined
         }
       >
@@ -1282,7 +1282,7 @@ const TaskRow = React.memo(function TaskRow({
             In <span className="text-foreground">{fmtTokens(task.tokens.input_tokens)}</span>
             {" · Cache "}
             <span className="text-foreground">{fmtTokens(task.tokens.cache_read_tokens)}</span>
-            {" · Out "}
+            {" · Ausgabe "}
             <span className="text-foreground">{fmtTokens(task.tokens.output_tokens)}</span>
           </span>
         ) : (
@@ -1387,8 +1387,8 @@ function TaskNameEditor({ task, onRename }: { task: Task; onRename: (task: Task,
         variant="ghost"
         size="icon-xs"
         className="shrink-0 opacity-100 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-focus-within:opacity-100 [@media(hover:hover)]:group-hover:opacity-100"
-        aria-label={`Rename task #${task.id}`}
-        title="Rename"
+        aria-label={`Aufgabe #${task.id} umbenennen`}
+        title="Umbenennen"
         onClick={() => {
           setName(task.name ?? "");
           setEditing(true);
@@ -1531,7 +1531,7 @@ function ArchiveConfirmDialog({
 function TaskArchiveAction({ task, onArchive }: { task: Task; onArchive: (task: Task) => Promise<void> }) {
   const reason = archiveBlockReason(task);
   const trigger = (
-    <Button size="icon" variant="ghost" disabled={Boolean(reason)} aria-label={`Archive task #${task.id}`}>
+    <Button size="icon" variant="ghost" disabled={Boolean(reason)} aria-label={`Aufgabe #${task.id} archivieren`}>
       <ArchiveIcon />
     </Button>
   );
@@ -1594,7 +1594,7 @@ function formatArchiveBytes(bytes: number): string {
 function archiveCompressionLabel(archive: TaskArchive): string {
   if (archive.original_size <= 0 || archive.compressed_size <= 0) return "—";
   const saved = Math.max(0, 100 - (archive.compressed_size / archive.original_size) * 100);
-  return `${formatArchiveBytes(archive.compressed_size)} · ${saved.toFixed(0)}% saved`;
+  return `${formatArchiveBytes(archive.compressed_size)} · ${saved.toFixed(0)} % kleiner`;
 }
 
 function archiveDataTotal(archive: TaskArchive): number {
@@ -1605,7 +1605,7 @@ function archiveDate(value?: string): string {
   if (!value) return "—";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleString();
+  return date.toLocaleString("de-DE");
 }
 
 function ArchiveDeleteDialog({
@@ -1626,9 +1626,9 @@ function ArchiveDeleteDialog({
       <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Permanently delete {archives.length} task archives?</AlertDialogTitle>
+          <AlertDialogTitle>Aufgabenarchive endgültig löschen ({archives.length})?</AlertDialogTitle>
           <AlertDialogDescription className="[overflow-wrap:anywhere]">
-            Permanently deletes about {formatArchiveBytes(bytes)} of archive packages and {rows.toLocaleString()} related data snapshots. This action cannot be undone.
+            Dadurch werden rund {formatArchiveBytes(bytes)} an Archivpaketen und {rows.toLocaleString("de-DE")} zugehörige Datensicherungen endgültig gelöscht. Das lässt sich nicht rückgängig machen.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -1687,7 +1687,7 @@ function TaskArchivesPanel({ onChanged }: { onChanged: () => void }) {
         let restored = false;
         states.forEach((state, index) => {
           if (state.status !== "rejected" || !(state.reason instanceof Error)) return;
-          if (!state.reason.message.includes("归档不存在")) return;
+          if (!("status" in state.reason) || state.reason.status !== 404) return;
           pendingRestoreIDs.current.delete(pending[index]);
           restored = true;
         });
@@ -1870,7 +1870,7 @@ function TaskArchivesPanel({ onChanged }: { onChanged: () => void }) {
         ) : archives.length === 0 ? (
           <Empty className="mx-4 border border-dashed lg:mx-6">
             <EmptyHeader>
-              <EmptyTitle>No task archives</EmptyTitle>
+              <EmptyTitle>Keine Aufgabenarchive</EmptyTitle>
               <EmptyDescription>Paused or terminal tasks can be archived from the current task list.</EmptyDescription>
             </EmptyHeader>
           </Empty>
@@ -1884,7 +1884,7 @@ function TaskArchivesPanel({ onChanged }: { onChanged: () => void }) {
                     onCheckedChange={(checked) =>
                       setSelected(checked === true ? new Set(selectable.map((archive) => archive.id)) : new Set())
                     }
-                    aria-label="Select archives on this page"
+                    aria-label="Archive auf dieser Seite auswählen"
                   />
                 </TableHead>
                 <TableHead>Aufgabe</TableHead>
@@ -1916,7 +1916,7 @@ function TaskArchivesPanel({ onChanged }: { onChanged: () => void }) {
                             return next;
                           })
                         }
-                        aria-label={`Select task archive #${archive.task_id}`}
+                        aria-label={`Archiv der Aufgabe #${archive.task_id} auswählen`}
                       />
                     </TableCell>
                     <TableCell className="max-w-sm">
@@ -1942,7 +1942,7 @@ function TaskArchivesPanel({ onChanged }: { onChanged: () => void }) {
                     >
                       {archiveCompressionLabel(archive)}
                     </TableCell>
-                    <TableCell className="text-xs tabular-nums">{archiveDataTotal(archive).toLocaleString()}</TableCell>
+                    <TableCell className="text-xs tabular-nums">{archiveDataTotal(archive).toLocaleString("de-DE")}</TableCell>
                     <TableCell>
                       <div className="flex min-w-0 flex-col gap-1.5">
                         <ArchiveStateBadge state={archive.state} />
@@ -1970,7 +1970,7 @@ function TaskArchivesPanel({ onChanged }: { onChanged: () => void }) {
                             size="icon"
                             variant="ghost"
                             onClick={() => void retry(archive)}
-                            aria-label="Retry archive operation"
+                            aria-label="Archivvorgang wiederholen"
                             title="Erneut versuchen"
                           >
                             <Undo2Icon />
@@ -1992,7 +1992,7 @@ function TaskArchivesPanel({ onChanged }: { onChanged: () => void }) {
                             archives={[archive]}
                             onConfirm={() => deleteMany([archive])}
                             trigger={
-                              <Button size="icon" variant="ghost" aria-label="Permanently delete archive" title="Endgültig löschen">
+                              <Button size="icon" variant="ghost" aria-label="Archiv endgültig löschen" title="Endgültig löschen">
                                 <Trash2Icon />
                               </Button>
                             }
@@ -2178,7 +2178,7 @@ function DeleteTaskDialog({
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogTrigger asChild>
-        <Button size="icon" variant="outline" aria-label="Delete task">
+        <Button size="icon" variant="outline" aria-label="Aufgabe löschen">
           <Trash2Icon className="text-destructive" />
         </Button>
       </AlertDialogTrigger>
@@ -2186,7 +2186,7 @@ function DeleteTaskDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Aufgabe #{task.id} löschen?</AlertDialogTitle>
           <AlertDialogDescription className="break-words">
-            {task.description ? (
+            Beim Löschen der Aufgabe {task.description ? (
               <>
                 "
                 <span className="break-all">
@@ -2195,9 +2195,9 @@ function DeleteTaskDialog({
                 "
               </>
             ) : (
-              "This task "
+              ""
             )}
-            execution history and exploration graph will be permanently deleted.
+            werden auch der Ausführungsverlauf und der Erkundungsgraph endgültig gelöscht.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <DeleteOptionFields idPrefix={task.id} options={options} onOptionsChange={setOptions} disabled={deleting} />
@@ -2250,7 +2250,7 @@ function MoveTasksCategoryDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline">
-          <FolderInputIcon data-icon="inline-start" /> Change category
+          <FolderInputIcon data-icon="inline-start" /> Kategorie ändern
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -2334,7 +2334,7 @@ function BulkDeleteTasksDialog({
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
       <AlertDialogTrigger asChild>
         <Button size="sm" variant="outline">
-          <Trash2Icon className="text-destructive" /> Delete selected {ids.length}
+          <Trash2Icon className="text-destructive" /> Auswahl löschen {ids.length}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent className="max-h-[85vh] overflow-y-auto">
@@ -2419,7 +2419,7 @@ function SourceTaskPicker({
         />
       </ComboboxChips>
       <ComboboxContent portalContainer={portalContainer}>
-        <ComboboxEmpty>No matching tasks</ComboboxEmpty>
+        <ComboboxEmpty>Keine passenden Aufgaben</ComboboxEmpty>
         <ComboboxList>
           {(taskID) => {
             const task = tasksByID.get(taskID);
@@ -2428,7 +2428,7 @@ function SourceTaskPicker({
                 <div className="flex min-w-0 flex-1 items-center gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">
-                      #{taskID} · {task?.description ?? "Unknown task"}
+                      #{taskID} · {task?.description ?? "Unbekannte Aufgabe"}
                     </p>
                     {task?.goal && <p className="text-muted-foreground truncate text-xs">{task.goal}</p>}
                   </div>
@@ -2560,10 +2560,10 @@ function CategoryPicker({
               className="flex w-full items-center gap-2 px-2 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
             >
               {creating ? <Spinner className="size-4" /> : <PlusIcon className="size-4" />}
-              Create category "{trimmed}"
+              Kategorie „{trimmed}“ erstellen
             </button>
           ) : (
-            <div className="px-2 py-2 text-sm text-muted-foreground">Type a name to search or create a category</div>
+            <div className="px-2 py-2 text-sm text-muted-foreground">Geben Sie einen Namen ein, um eine Kategorie zu suchen oder zu erstellen</div>
           ))}
       </ComboboxContent>
     </Combobox>
@@ -2585,7 +2585,7 @@ function companyScopeSummary(company: Company): string {
     const value = row.raw || row.value || row.domain || row.net || "";
     return `${COMPANY_SCOPE_LABELS[row.kind] ?? row.kind}: ${value}`;
   });
-  return `${preview.join(" · ")}${rows.length > preview.length ? ` · ${rows.length - preview.length} more` : ""}`;
+  return `${preview.join(" · ")}${rows.length > preview.length ? ` · ${rows.length - preview.length} weitere` : ""}`;
 }
 
 function CompanyPicker({
@@ -2623,10 +2623,10 @@ function CompanyPicker({
             <ComboboxChip key={companyID}>{companiesByID.get(companyID)?.name ?? `Company #${companyID}`}</ComboboxChip>
           ))}
         </ComboboxValue>
-        <ComboboxChipsInput id="task-companies" placeholder="Search company name or asset scope" />
+        <ComboboxChipsInput id="task-companies" placeholder="Unternehmensname oder Asset-Umfang suchen" />
       </ComboboxChips>
       <ComboboxContent portalContainer={portalContainer}>
-        <ComboboxEmpty>No matching companies</ComboboxEmpty>
+        <ComboboxEmpty>Keine passenden Unternehmen</ComboboxEmpty>
         <ComboboxList>
           {(companyID) => {
             const company = companiesByID.get(companyID);
@@ -2710,8 +2710,8 @@ function DraggableCategoryTask({ task, disabled, moving }: { task: Task; disable
             disabled={disabled}
             {...listeners}
             {...attributes}
-            aria-label={`Drag task #${task.id}`}
-            title="Drag task"
+            aria-label={`Aufgabe #${task.id} verschieben`}
+            title="Aufgabe verschieben"
           >
             <GripVerticalIcon />
           </Button>

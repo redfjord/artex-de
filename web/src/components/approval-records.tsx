@@ -38,7 +38,7 @@ import { cn } from "@/lib/utils";
 
 function fmtTime(value?: string) {
   if (!value) return "—";
-  return new Date(value).toLocaleString("zh-CN", {
+  return new Date(value).toLocaleString("de-DE", {
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
@@ -239,7 +239,7 @@ function ModelReviewContext({ input }: { input: InterceptReviewInput }) {
               </div>
             ))
           ) : (
-            <p className="text-muted-foreground text-xs">No matching historical tool execution was provided for this review.</p>
+            <p className="text-muted-foreground text-xs">Für diese Prüfung liegt kein passender früherer Toolaufruf vor.</p>
           )}
           {input.history_truncated ? (
             <p className="text-muted-foreground text-xs">Der Verlauf verwendet ein begrenztes Fenster; einige Inhalte wurden gekürzt.</p>
@@ -469,7 +469,7 @@ export function ApprovalDetail({
                           audit.context.map((entry, index) => (
                             <CodeBlock
                               key={`${entry.kind}-${entry.tool_use_id || index}`}
-                              label={`${contextLabels[entry.kind] ?? entry.kind}${entry.tool ? ` · ${entry.tool}` : ""}${entry.is_error ? " · error" : ""}`}
+                              label={`${contextLabels[entry.kind] ?? entry.kind}${entry.tool ? ` · ${entry.tool}` : ""}${entry.is_error ? " · Fehler" : ""}`}
                               text={entry.text}
                               truncated={entry.truncated}
                             />

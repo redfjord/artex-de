@@ -8,10 +8,9 @@
 > ausführen und Netzwerkverkehr erzeugen. Setze es ausschließlich gegen Systeme ein, die dir gehören
 > oder für die du eine ausdrückliche schriftliche Erlaubnis hast.
 
-*English summary: unofficial German localization of FailSafe ARTEX v0.3.15. Only display text was
-translated. The included verifiers prove that the Go code is token-identical and the web UI's syntax
-trees are identical to the FailSafe base, with no new files, dependencies, URLs or domains
-(see [SICHERHEITSNACHWEIS.md](SICHERHEITSNACHWEIS.md), runnable via `verify/run-verification.sh`).*
+*English summary: unofficial German localization of FailSafe ARTEX v0.3.15.
+The verification compares Go tokens and web syntax trees against a fixed reference.
+Small UI compatibility changes are listed separately in [the verification notes](SICHERHEITSNACHWEIS.md).*
 
 ---
 
@@ -25,11 +24,11 @@ Details zu Funktionen und Architektur stehen in der unveränderten
 
 ## Was ist in diesem Fork anders?
 
-**Nur die Sprache.** Gegenüber FailSafe ARTEX `v0.3.15` wurden ausschließlich Texte übersetzt:
+Der Schwerpunkt liegt auf der deutschen Oberfläche und den Meldungen:
 
 | Bereich | Übersetzt |
 |---|---|
-| Web-Konsole | alle sichtbaren Texte (Navigation, Buttons, Tabellen, Dialoge, Hinweise, Meldungen) Englisch → Deutsch |
+| Web-Konsole | Navigation, Buttons, Tabellen, Dialoge, Hinweise und Meldungen ins Deutsche übertragen |
 | Backend (Go) | Fehlermeldungen, Benachrichtigungen (E-Mail, Telegram, DingTalk, Feishu, WeCom, Webhook), Berichte, Tool-Beschreibungen, Agenten-Prompts und Log-Texte Chinesisch → Deutsch |
 | Tests | erwartete Ausgabetexte an die deutschen Texte angepasst |
 
@@ -60,13 +59,13 @@ Ein Übersetzungs-Fork ist ein naheliegendes Versteck für Schadcode. Deshalb li
 ./verify/run-verification.sh
 ```
 
-Das Skript rekonstruiert die FailSafe-Basis aus `verify/german-translation.patch` und prüft danach:
+Das Skript prüft die rekonstruierte FailSafe-Basis gegen eine festgelegte Prüfsumme. Der Vergleich berücksichtigt die in `verify/ui-compatibility.patch` dokumentierten Anpassungen der Oberfläche:
 
 1. **Go:** Alle 335 `.go`-Dateien werden mit dem offiziellen Go-Tokenizer zerlegt. Ohne
    Kommentare und Text-Literale ist der Code **token-identisch**. Geändert wurden ausschließlich
    Literale, die vorher chinesischen Text enthielten.
 2. **Web:** Alle 189 TypeScript/TSX-Dateien werden mit dem projekteigenen TypeScript-Compiler
-   geparst. Die **Syntaxbäume sind identisch**, nur Anzeigetexte unterscheiden sich.
+   geparst. Im reinen Übersetzungsvergleich sind die **Syntaxbäume identisch**. Die Umstellung auf deutsche Zahlenformate, die Behandlung des HTTP-Status beim Archiv und die Anzeige des Toolnamens im Transkript stehen separat im Anpassungspatch.
 3. **Keine neuen URLs oder Domains**, die die Prüfer in den untersuchten Go- und Web-Texten erkennen.
 4. **Keine Indikatoren** des bekannten `tomicdd`-Backdoors (`verifyCaptcha` usw.).
 

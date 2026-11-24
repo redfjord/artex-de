@@ -47,7 +47,7 @@ import type { TrafficDetail, TrafficExchange, TrafficHost, TrafficResp } from "@
 import { cn } from "@/lib/utils";
 
 function fmtTime(ts: string) {
-  return new Date(ts).toLocaleString("zh-CN", {
+  return new Date(ts).toLocaleString("de-DE", {
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
@@ -447,7 +447,7 @@ export default function TrafficPage() {
                   setPickerOpen(false);
                 }}
               >
-                Delete selected ({selectedHosts.length})
+                Auswahl löschen ({selectedHosts.length})
               </Button>
             </div>
           </PopoverContent>

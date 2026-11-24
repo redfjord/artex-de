@@ -111,6 +111,24 @@ function getToken(): string | null {
   return localStorage.getItem("artex_token");
 }
 
+const localizedHttpErrors = new Map([
+  ["agent not found", "Agent nicht gefunden"],
+  ["company not found", "Unternehmen nicht gefunden"],
+  ["conversation not found", "Konversation nicht gefunden"],
+  ["description is required", "Eine Beschreibung ist erforderlich"],
+  ["file not found", "Datei nicht gefunden"],
+  ["finding not found", "Fund nicht gefunden"],
+  ["invalid id", "Ungültige ID"],
+  ["invalid JSON", "Ungültiges JSON"],
+  ["invalid skill name", "Ungültiger Skillname"],
+  ["not found", "Nicht gefunden"],
+  ["skill already exists", "Der Skill existiert bereits"],
+  ["skill not found", "Skill nicht gefunden"],
+  ["task category not found", "Aufgabenkategorie nicht gefunden"],
+  ["task not found", "Aufgabe nicht gefunden"],
+  ["task template not found", "Aufgabenvorlage nicht gefunden"],
+]);
+
 export async function http<T>(path: string, init?: RequestInit): Promise<T> {
   if (MOCK) return mockHandle<T>(init?.method ?? "GET", path, init?.body ?? null);
   const token = getToken();
@@ -141,7 +159,7 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {
       // Keep the status-based fallback for empty or non-JSON error responses.
     }
-    throw new Error(message);
+    throw Object.assign(new Error(localizedHttpErrors.get(message) ?? message), { status: r.status });
   }
   if (r.status === 204) return undefined as T;
   return r.json();
@@ -1161,7 +1179,7 @@ export const api = {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     const body = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(body?.error || `Upload failed (${r.status})`);
+    if (!r.ok) throw new Error(body?.error || `Hochladen fehlgeschlagen (${r.status})`);
     return body;
   },
   deleteSkill: (name: string) => del<{ deleted: string }>(`/skills/${name}`),

@@ -47,7 +47,7 @@ import type { Agent, SkillItem, MCPServer, SkillCall, MissingSkill } from "@/lib
 
 function fmtTime(ts?: string) {
   if (!ts) return "Nie aufgerufen";
-  return new Date(ts).toLocaleString("zh-CN", {
+  return new Date(ts).toLocaleString("de-DE", {
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
@@ -415,7 +415,7 @@ export default function SkillsPage() {
     setFileLoading(true);
     api.readSkillFile(selected.skill, selected.path)
       .then((c) => { setFileContent(c); setDirty(false); })
-      .catch(() => toast.error("Failed to read file"))
+      .catch(() => toast.error("Datei konnte nicht gelesen werden"))
       .finally(() => setFileLoading(false));
   }, [selected]);
 
@@ -705,7 +705,7 @@ export default function SkillsPage() {
       <div className="flex items-center gap-3 border-b px-4 py-2.5 lg:px-6">
         <div className="flex flex-col gap-0.5">
           <h1 className="text-sm font-semibold leading-tight">Skill</h1>
-          <p className="text-muted-foreground text-xs">Skill-Bibliothek · agentskills.io-Spezifikation · Sichtbarkeit pro Agent gewährt</p>
+          <p className="text-muted-foreground text-xs">Skill-Bibliothek · Spezifikation agentskills.io · Sichtbarkeit je Agent einstellbar</p>
         </div>
         {/* Gap list: skills that agents named but the library does not have — a direct indication of what to add. */}
         {missing.length > 0 && (

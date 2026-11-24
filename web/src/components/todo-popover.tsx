@@ -62,7 +62,7 @@ export function TodoPopover({
       </PopoverTrigger>
       <PopoverContent align="end" className="max-h-80 w-80 overflow-auto p-2">
         <p className="text-muted-foreground px-1 pb-1 text-[11px] font-medium">
-          Recent todos{loading ? " · Loading…" : ""}
+          Letzte To-dos{loading ? " · Wird geladen …" : ""}
         </p>
         {err && <p className="text-destructive px-1 text-xs">{err}</p>}
         {todos && todos.length === 0 && !loading && (

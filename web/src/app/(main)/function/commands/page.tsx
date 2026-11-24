@@ -17,7 +17,7 @@ import type { CommandRecord, ToolStat } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 function fmtTime(ts: string) {
-  return new Date(ts).toLocaleString("zh-CN", {
+  return new Date(ts).toLocaleString("de-DE", {
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
@@ -309,7 +309,7 @@ export default function CommandsPage() {
                     <div className="flex items-center gap-2">
                       <span className="truncate font-mono text-xs font-medium">{s.tool}</span>
                       {s.errors > 0 && (
-                        <span className="text-[11px] tabular-nums text-red-600 dark:text-red-400">Failed {s.errors}</span>
+                        <span className="text-[11px] tabular-nums text-red-600 dark:text-red-400">Fehlgeschlagen {s.errors}</span>
                       )}
                     </div>
                     <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">

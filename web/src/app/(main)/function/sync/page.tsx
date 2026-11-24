@@ -266,7 +266,7 @@ function SyncWorkbench() {
   const chosenTypes = ASSET_TYPES.filter((t) => assetTypes[t.key]).map((t) => t.key);
 
   const runSync = async () => {
-    if (selected.size === 0) return toast.error(`Select at least one ${dimension === "project" ? "project" : "task"}`);
+    if (selected.size === 0) return toast.error(`Wählen Sie mindestens ${dimension === "project" ? "ein Projekt" : "eine Aufgabe"} aus`);
     if (chosenTypes.length === 0) return toast.error("Mindestens einen Asset-Typ auswählen");
     setSyncing(true);
     setResult(null);

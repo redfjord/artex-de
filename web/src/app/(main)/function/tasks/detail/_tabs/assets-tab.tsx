@@ -192,7 +192,7 @@ function AssetCard({
     tableRows = (
       <TableRow>
         <TableCell colSpan={cols.length} className="py-10 text-center text-muted-foreground text-sm">
-          No test assets in this category
+          Keine Test-Assets in dieser Kategorie
         </TableCell>
       </TableRow>
     );
@@ -309,8 +309,8 @@ function AddTaskAssetsSheet({
         <SheetHeader>
           <SheetTitle>Test-Assets hinzufügen</SheetTitle>
           <SheetDescription>
-            Enter the test scope directly. Domains and IPs create or reuse global assets; CIDRs, ICP records,
-            and keywords are passed to the agent as scope context.
+            Geben Sie den Testumfang direkt ein. Domains und IP-Adressen werden als globale Assets angelegt oder wiederverwendet.
+            CIDR-Netze, ICP-Einträge und Stichwörter dienen dem Agenten als Kontext für den Testumfang.
           </SheetDescription>
         </SheetHeader>
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4">
@@ -325,7 +325,7 @@ function AddTaskAssetsSheet({
         </div>
         <SheetFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancel
+            Abbrechen
           </Button>
           <Button
             onClick={() => void attach()}
@@ -454,7 +454,7 @@ export function AssetsTab({ taskId }: { taskId: string }) {
       variant="ghost"
       size="icon-sm"
       onClick={() => setRemoveTarget(asset)}
-      aria-label={`Remove asset ${assetLabel(asset)} from task`}
+      aria-label={`Asset „${assetLabel(asset)}“ aus der Aufgabe entfernen`}
       title="Aus Aufgabe entfernen"
     >
       <Trash2Icon />
@@ -681,14 +681,14 @@ export function AssetsTab({ taskId }: { taskId: string }) {
       <AlertDialog open={Boolean(removeTarget)} onOpenChange={(open) => !open && !removing && setRemoveTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove from current task?</AlertDialogTitle>
+            <AlertDialogTitle>Aus der aktuellen Aufgabe entfernen?</AlertDialogTitle>
             <AlertDialogDescription className="[overflow-wrap:anywhere]">
               {removeTarget ? `„${assetLabel(removeTarget)}“ aus den Test-Assets der aktuellen Aufgabe entfernen.` : ""}
               Global assets, linked traffic, and historical blackboard anchors are kept.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={removing}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={removing}>Abbrechen</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               disabled={removing}

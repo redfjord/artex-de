@@ -78,13 +78,13 @@ export function useApprovalHistory(
         const page = await loadPage(before);
         if (cancelled) return;
         if (!page.items.length || (before > 0 && page.items[0].seq >= before)) {
-          throw new Error("The corresponding tool call was not found in the conversation; the record may have been deleted");
+          throw new Error("Der zugehörige Toolaufruf fehlt in der Konversation. Möglicherweise wurde der Eintrag gelöscht.");
         }
         mergePage(page);
         current = page.items;
         before = current[0].seq;
         if (!page.hasMore && !current.some((a) => a.seq === source.seq)) {
-          throw new Error("The corresponding tool call was not found in the conversation");
+          throw new Error("Der zugehörige Toolaufruf wurde in der Konversation nicht gefunden.");
         }
       }
       if (!cancelled) setResult({ source });
@@ -126,11 +126,11 @@ export function ApprovalExecutionFocus({
       <div className="flex gap-2">
         {error ? (
           <Button size="sm" variant="outline" onClick={focus.retry}>
-            Retry
+            Erneut versuchen
           </Button>
         ) : null}
         <Button size="sm" variant="ghost" onClick={focus.close}>
-          Cancel
+          Abbrechen
         </Button>
       </div>
     </div>

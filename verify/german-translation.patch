@@ -3673,7 +3673,7 @@ index ec710a9..9dc567b 100644
  	return err
  }
 diff --git a/db/task_archives_restore.go b/db/task_archives_restore.go
-index 172e52c..9259e31 100644
+index 172e52c..6e00b93 100644
 --- a/db/task_archives_restore.go
 +++ b/db/task_archives_restore.go
 @@ -211,18 +211,18 @@ WHERE archive.id=$1 FOR UPDATE OF archive,task`, archiveID).Scan(&taskID, &expID
@@ -3681,20 +3681,20 @@ index 172e52c..9259e31 100644
  	if categoryID > 0 && !rowExists(tx, "task_categories", categoryID) {
  		taskRow["category_id"] = nil
 -		warnings = append(warnings, fmt.Sprintf("任务分类 %d 已删除，已恢复为未分类", categoryID))
-+		warnings = append(warnings, fmt.Sprintf("Aufgabenkategorie %d gelöst, als unkategorisiert wiederhergestellt", categoryID))
++		warnings = append(warnings, fmt.Sprintf("Aufgabenkategorie %d fehlt, als unkategorisiert wiederhergestellt", categoryID))
  	}
  	companyID, _ := jsonInt64(taskRow["company_id"])
  	if companyID > 0 && !rowExists(tx, "companies", companyID) {
  		taskRow["company_id"] = nil
 -		warnings = append(warnings, fmt.Sprintf("任务企业 %d 已删除，企业关联已跳过", companyID))
-+		warnings = append(warnings, fmt.Sprintf("Aufgabenunternehmen %d gelöst, Unternehmensverbindung übersprungen", companyID))
++		warnings = append(warnings, fmt.Sprintf("Aufgabenunternehmen %d fehlt, Unternehmensverbindung übersprungen", companyID))
  	}
  	for _, key := range []string{"llm_profile_id", "active_llm_profile_id"} {
  		profileID, _ := jsonInt64(taskRow[key])
  		if profileID > 0 && !rowExists(tx, "llm_profiles", profileID) {
  			taskRow[key] = nil
 -			warnings = append(warnings, fmt.Sprintf("LLM 配置 %d 已删除，已从任务配置中移除", profileID))
-+			warnings = append(warnings, fmt.Sprintf("LLM-Konfiguration %d gelöst, aus Aufgabenkonfiguration entfernt", profileID))
++			warnings = append(warnings, fmt.Sprintf("LLM-Konfiguration %d fehlt, aus Aufgabenkonfiguration entfernt", profileID))
  		}
  	}
  	if err := restoreExplorationStub(tx, snapshot.Tables["explorations"], expID); err != nil {
@@ -3730,7 +3730,7 @@ index 172e52c..9259e31 100644
  	for _, row := range rows {
  		if companyID, ok := jsonInt64(row["company_id"]); ok && companyID > 0 && !rowExists(tx, "companies", companyID) {
 -			warnings = append(warnings, fmt.Sprintf("企业 %d 已删除，关联范围已跳过", companyID))
-+			warnings = append(warnings, fmt.Sprintf("Unternehmen %d gelöst, zugehöriger Bereich übersprungen", companyID))
++			warnings = append(warnings, fmt.Sprintf("Unternehmen %d fehlt, zugehöriger Bereich übersprungen", companyID))
  			continue
  		}
  		kept = append(kept, row)
@@ -3739,7 +3739,7 @@ index 172e52c..9259e31 100644
  		profileID, ok := jsonInt64(row["profile_id"])
  		if !ok || !rowExists(tx, "llm_profiles", profileID) {
 -			warnings = append(warnings, fmt.Sprintf("LLM 配置 %d 已删除，配置链项已跳过", profileID))
-+			warnings = append(warnings, fmt.Sprintf("LLM-Konfiguration %d gelöst, Konfigurationsketteneintrag übersprungen", profileID))
++			warnings = append(warnings, fmt.Sprintf("LLM-Konfiguration %d fehlt, Konfigurationsketteneintrag übersprungen", profileID))
  			continue
  		}
  		taskID, _ := jsonInt64(row["task_id"])
@@ -3758,7 +3758,7 @@ index 172e52c..9259e31 100644
  			}
  		} else if audit, ok := row["audit"].(map[string]any); ok && audit["execution_status"] == "awaiting_result" {
 diff --git a/db/task_archives_test.go b/db/task_archives_test.go
-index 498fa97..0829984 100644
+index 498fa97..1bdd04d 100644
 --- a/db/task_archives_test.go
 +++ b/db/task_archives_test.go
 @@ -271,7 +271,7 @@ VALUES($1,$2,0,'quota_exhausted','balance exhausted',$3,$4,$3)`, task.ID, llmPro
@@ -3766,7 +3766,7 @@ index 498fa97..0829984 100644
  	warningFound := false
  	for _, warning := range warnings {
 -		if strings.Contains(warning, fmt.Sprintf("任务企业 %d 已删除", companyID)) {
-+		if strings.Contains(warning, fmt.Sprintf("Aufgabenunternehmen %d gelöst", companyID)) {
++		if strings.Contains(warning, fmt.Sprintf("Aufgabenunternehmen %d fehlt", companyID)) {
  			warningFound = true
  		}
  	}
@@ -12659,6 +12659,19 @@ index bf37db5..40cc250 100644
 -  return <>Coming Soon</>;
 +  return <>Demnächst verfügbar</>;
  }
+diff --git a/web/src/app/(main)/_components/sidebar/account-switcher.tsx b/web/src/app/(main)/_components/sidebar/account-switcher.tsx
+index 54daaf9..3bccad8 100644
+--- a/web/src/app/(main)/_components/sidebar/account-switcher.tsx
++++ b/web/src/app/(main)/_components/sidebar/account-switcher.tsx
+@@ -80,7 +80,7 @@ export function AccountSwitcher({
+           <DropdownMenuSeparator />
+           <DropdownMenuItem onClick={() => setPwOpen(true)}>
+             <KeyRound />
+-            Change password
++            Passwort ändern
+           </DropdownMenuItem>
+           <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+             <LogOut />
 diff --git a/web/src/app/(main)/_components/sidebar/change-password-dialog.tsx b/web/src/app/(main)/_components/sidebar/change-password-dialog.tsx
 index 7c63627..89e9ce1 100644
 --- a/web/src/app/(main)/_components/sidebar/change-password-dialog.tsx
@@ -12907,6 +12920,118 @@ index 28091b4..1ef42ae 100644
              </Button>
            </div>
          </div>
+diff --git a/web/src/app/(main)/_components/sidebar/nav-documents.tsx b/web/src/app/(main)/_components/sidebar/nav-documents.tsx
+index 730aa4f..467facc 100644
+--- a/web/src/app/(main)/_components/sidebar/nav-documents.tsx
++++ b/web/src/app/(main)/_components/sidebar/nav-documents.tsx
+@@ -46,7 +46,7 @@ export function NavDocuments({
+               <DropdownMenuTrigger asChild>
+                 <SidebarMenuAction showOnHover className="rounded-sm data-[state=open]:bg-accent">
+                   <Ellipsis />
+-                  <span className="sr-only">More</span>
++                  <span className="sr-only">Mehr</span>
+                 </SidebarMenuAction>
+               </DropdownMenuTrigger>
+               <DropdownMenuContent
+@@ -56,7 +56,7 @@ export function NavDocuments({
+               >
+                 <DropdownMenuItem>
+                   <Folder />
+-                  <span>Open</span>
++                  <span>Öffnen</span>
+                 </DropdownMenuItem>
+                 <DropdownMenuItem>
+                   <Forward />
+@@ -65,7 +65,7 @@ export function NavDocuments({
+                 <DropdownMenuSeparator />
+                 <DropdownMenuItem variant="destructive">
+                   <Trash2 />
+-                  <span>Delete</span>
++                  <span>Löschen</span>
+                 </DropdownMenuItem>
+               </DropdownMenuContent>
+             </DropdownMenu>
+@@ -74,7 +74,7 @@ export function NavDocuments({
+         <SidebarMenuItem>
+           <SidebarMenuButton className="text-sidebar-foreground/70">
+             <Ellipsis className="text-sidebar-foreground/70" />
+-            <span>More</span>
++            <span>Mehr</span>
+           </SidebarMenuButton>
+         </SidebarMenuItem>
+       </SidebarMenu>
+diff --git a/web/src/app/(main)/_components/sidebar/nav-user.tsx b/web/src/app/(main)/_components/sidebar/nav-user.tsx
+index 67fd4e6..7bd8b29 100644
+--- a/web/src/app/(main)/_components/sidebar/nav-user.tsx
++++ b/web/src/app/(main)/_components/sidebar/nav-user.tsx
+@@ -79,7 +79,7 @@ export function NavUser({
+             <DropdownMenuSeparator />
+             <DropdownMenuItem onClick={() => setPwOpen(true)}>
+               <KeyRound />
+-              Change password
++              Passwort ändern
+             </DropdownMenuItem>
+             <DropdownMenuSeparator />
+             <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+diff --git a/web/src/app/(main)/_components/sidebar/search-dialog.tsx b/web/src/app/(main)/_components/sidebar/search-dialog.tsx
+index d07251d..45014da 100644
+--- a/web/src/app/(main)/_components/sidebar/search-dialog.tsx
++++ b/web/src/app/(main)/_components/sidebar/search-dialog.tsx
+@@ -138,16 +138,16 @@ export function SearchDialog() {
+         className="px-0! font-normal text-muted-foreground hover:no-underline"
+       >
+         <Search data-icon="inline-start" />
+-        Search
++        Suchen
+         <kbd className="inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-medium text-[10px]">
+           <span className="text-xs">⌘</span>J
+         </kbd>
+       </Button>
+       <CommandDialog open={open} onOpenChange={handleOpenChange}>
+         <Command>
+-          <CommandInput placeholder="Search dashboards, users, and more…" value={query} onValueChange={setQuery} />
++          <CommandInput placeholder="Dashboards, Benutzer und mehr suchen …" value={query} onValueChange={setQuery} />
+           <CommandList>
+-            <CommandEmpty>No results found.</CommandEmpty>
++            <CommandEmpty>Keine Ergebnisse gefunden.</CommandEmpty>
+             {query ? renderGroups(searchItems) : renderGroups(recommendations)}
+           </CommandList>
+         </Command>
+diff --git a/web/src/app/(main)/_components/sidebar/sidebar-support-card.tsx b/web/src/app/(main)/_components/sidebar/sidebar-support-card.tsx
+index 5d41598..d9b7749 100644
+--- a/web/src/app/(main)/_components/sidebar/sidebar-support-card.tsx
++++ b/web/src/app/(main)/_components/sidebar/sidebar-support-card.tsx
+@@ -9,14 +9,14 @@ export function SidebarSupportCard() {
+   return (
+     <Card size="sm" className="overflow-hidden shadow-none group-data-[collapsible=icon]:hidden">
+       <CardHeader className="min-w-0 px-4">
+-        <CardTitle className="truncate text-sm">Looking for something more?</CardTitle>
++        <CardTitle className="truncate text-sm">Noch Fragen?</CardTitle>
+         <CardDescription className="line-clamp-2">
+-          Open an issue or do reach out to me on&nbsp;
++          Erstellen Sie ein Issue oder schreiben Sie mir über&nbsp;
+           <Link
+             href="https://x.com/arhamkhnz"
+             target="_blank"
+             rel="noreferrer"
+-            aria-label="Reach out on X"
++            aria-label="Kontakt auf X"
+             className="inline-flex items-center text-foreground"
+           >
+             <SimpleIcon icon={siX} aria-hidden className="size-3 fill-current" />
+diff --git a/web/src/app/(main)/_components/sidebar/theme-switcher.tsx b/web/src/app/(main)/_components/sidebar/theme-switcher.tsx
+index a95a83a..512d4de 100644
+--- a/web/src/app/(main)/_components/sidebar/theme-switcher.tsx
++++ b/web/src/app/(main)/_components/sidebar/theme-switcher.tsx
+@@ -21,7 +21,7 @@ export function ThemeSwitcher() {
+   };
+ 
+   return (
+-    <Button size="icon" onClick={cycleTheme} aria-label={`Current theme: ${themeMode}. Click to cycle themes`}>
++    <Button size="icon" onClick={cycleTheme} aria-label={`Farbschema wechseln (${themeMode})`}>
+       {/* SYSTEM */}
+       <Monitor className="hidden [html[data-theme-mode=system]_&]:block" />
+ 
 diff --git a/web/src/app/(main)/_components/update-badge.tsx b/web/src/app/(main)/_components/update-badge.tsx
 index dde0a0b..e98d32e 100644
 --- a/web/src/app/(main)/_components/update-badge.tsx
@@ -12932,7 +13057,7 @@ index dde0a0b..e98d32e 100644
    );
  }
 diff --git a/web/src/app/(main)/chat/page.tsx b/web/src/app/(main)/chat/page.tsx
-index 68fafd2..471cebb 100644
+index 68fafd2..a7079bc 100644
 --- a/web/src/app/(main)/chat/page.tsx
 +++ b/web/src/app/(main)/chat/page.tsx
 @@ -203,7 +203,7 @@ function Composer({
@@ -13014,6 +13139,15 @@ index 68fafd2..471cebb 100644
              {activeDefault && (
                <span className="text-muted-foreground text-[11px]">
                  {activeDefault.format} · {activeDefault.model}
+@@ -413,7 +413,7 @@ function DraftChat({
+       const r = await api.chatUpload("session", `conv-${c.id}`, files);
+       onStarted(c, { input, attachments: r.attachments });
+     } catch (e) {
+-      toast.error("Upload failed: " + (e as Error).message);
++      toast.error("Hochladen fehlgeschlagen: " + (e as Error).message);
+       setUploading(false);
+     }
+   }
 @@ -421,7 +421,7 @@ function DraftChat({
    const agentPicker = (
      <Select value={agentKey} onValueChange={setAgentKey}>
@@ -13050,6 +13184,15 @@ index 68fafd2..471cebb 100644
          leftSlot={agentPicker}
          onPickFiles={pickFiles}
          uploading={uploading}
+@@ -716,7 +716,7 @@ function ChatView({
+       const r = await api.chatUpload("session", `conv-${conv.id}`, files);
+       setAttachments((prev) => [...prev, ...r.attachments]);
+     } catch (e) {
+-      toast.error("Upload failed: " + (e as Error).message);
++      toast.error("Hochladen fehlgeschlagen: " + (e as Error).message);
+     } finally {
+       setUploading(false);
+     }
 @@ -768,7 +768,7 @@ function ChatView({
          <span className="text-muted-foreground hidden shrink-0 font-mono text-xs sm:inline">{conv.agent_key}</span>
          {agent && !agent.builtin && (
@@ -13104,11 +13247,16 @@ index 68fafd2..471cebb 100644
            checked={selectedForDelete}
            onCheckedChange={(checked) => onSelectedForDeleteChange(conv.id, checked === true)}
 -          aria-label={`Select conversation "${conv.title || "New conversation"}"`}
-+          aria-label={`Select conversation "${conv.title || "Neue Konversation"}"`}
++          aria-label={`Konversation „${conv.title || "Neue Konversation"}“ auswählen`}
            className="ml-1 shrink-0"
          />
        )}
-@@ -928,12 +928,12 @@ const ConversationItem = React.memo(function ConversationItem({
+@@ -924,16 +924,16 @@ const ConversationItem = React.memo(function ConversationItem({
+           type="button"
+           onClick={() => onSelect(conv.id)}
+           onDoubleClick={() => onStartRename(conv)}
+-          title="Double-click to rename"
++          title="Zum Umbenennen doppelklicken"
            className="min-w-0 flex-1 rounded-md px-2 py-1.5 text-left"
          >
            <div className="flex min-w-0 items-center gap-1.5">
@@ -13125,6 +13273,15 @@ index 68fafd2..471cebb 100644
                </Badge>
              ) : null}
            </div>
+@@ -946,7 +946,7 @@ const ConversationItem = React.memo(function ConversationItem({
+               </>
+             )}
+             <span className="shrink-0">
+-              {new Date(conv.created_at).toLocaleDateString("zh-CN", {
++              {new Date(conv.created_at).toLocaleDateString("de-DE", {
+                 month: "numeric",
+                 day: "numeric",
+                 hour: "2-digit",
 @@ -963,7 +963,7 @@ const ConversationItem = React.memo(function ConversationItem({
              variant="ghost"
              size="icon-sm"
@@ -13182,8 +13339,12 @@ index 68fafd2..471cebb 100644
    // clears the selection.
    const [selectionMode, setSelectionMode] = React.useState(false);
    const [bulkDeleteOpen, setBulkDeleteOpen] = React.useState(false);
-@@ -1214,7 +1214,7 @@ export default function ChatPage() {
-       .sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
+@@ -1211,10 +1211,10 @@ export default function ChatPage() {
+     if (agentFilter !== null) keys.add(agentFilter);
+     return [...keys]
+       .map((key) => ({ key, name: agentByKey.get(key)?.name || key, count: counts.get(key) ?? 0 }))
+-      .sort((a, b) => a.name.localeCompare(b.name, "zh-CN"));
++      .sort((a, b) => a.name.localeCompare(b.name, "de-DE"));
    }, [convs, chatAgents, agentByKey, agentFilter]);
    const conversationCountLabel =
 -    agentFilter === null ? `${convs.length} total` : `${filteredConversations.length} / ${convs.length}`;
@@ -13218,7 +13379,7 @@ index 68fafd2..471cebb 100644
        }
      },
      [reloadConvs],
-@@ -1355,7 +1355,7 @@ export default function ChatPage() {
+@@ -1355,20 +1355,20 @@ export default function ChatPage() {
          <div className="bg-card flex flex-col overflow-hidden rounded-lg border">
            <div className="flex flex-col gap-2 border-b p-2">
              <Button size="sm" className="w-full" onClick={() => selectConversation(null)}>
@@ -13227,9 +13388,11 @@ index 68fafd2..471cebb 100644
              </Button>
              <Select
                value={agentFilter === null ? "all" : `agent:${agentFilter}`}
-@@ -1364,11 +1364,11 @@ export default function ChatPage() {
+               onValueChange={(value) => changeAgentFilter(value === "all" ? null : value.slice(6))}
+               disabled={bulkDeleting}
              >
-               <SelectTrigger size="sm" className="w-full min-w-0" aria-label="Filter conversations by agent">
+-              <SelectTrigger size="sm" className="w-full min-w-0" aria-label="Filter conversations by agent">
++              <SelectTrigger size="sm" className="w-full min-w-0" aria-label="Konversationen nach Agent filtern">
                  <Bot />
 -                <SelectValue placeholder="All agents" />
 +                <SelectValue placeholder="Alle Agenten" />
@@ -13305,11 +13468,13 @@ index 68fafd2..471cebb 100644
              </div>
            ) : (
              <DraftChat
-@@ -1546,10 +1546,10 @@ export default function ChatPage() {
+@@ -1545,11 +1545,11 @@ export default function ChatPage() {
+       <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
          <AlertDialogContent>
            <AlertDialogHeader>
-             <AlertDialogTitle>Delete the {selectedConversationCount} selected conversations?</AlertDialogTitle>
+-            <AlertDialogTitle>Delete the {selectedConversationCount} selected conversations?</AlertDialogTitle>
 -            Conversation messages and execution records will also be deleted. This action cannot be undone.
++            <AlertDialogTitle>Ausgewählte Konversationen löschen ({selectedConversationCount})?</AlertDialogTitle>
 +            Konversationsnachrichten und Ausführungsprotokolle werden ebenfalls gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.
            </AlertDialogHeader>
            <AlertDialogFooter>
@@ -13803,7 +13968,7 @@ index e082aef..1cc51b5 100644
            )}
          </Card>
 diff --git a/web/src/app/(main)/function/assets/page.tsx b/web/src/app/(main)/function/assets/page.tsx
-index 9782d60..628432e 100644
+index 9782d60..76be7ab 100644
 --- a/web/src/app/(main)/function/assets/page.tsx
 +++ b/web/src/app/(main)/function/assets/page.tsx
 @@ -98,13 +98,13 @@ function statusTone(code: number) {
@@ -13888,6 +14053,15 @@ index 9782d60..628432e 100644
                          )}
                        </TableCell>
                        <TableCell className="text-right">
+@@ -395,7 +395,7 @@ export default function AssetsPage() {
+                               setCompanyDeleteTarget(c);
+                               setCompanyDeleteAssets(false);
+                             }}
+-                            aria-label={`Delete company ${c.name}`}
++                            aria-label={`Unternehmen ${c.name} löschen`}
+                           >
+                             <Trash2Icon className="size-3.5" />
+                           </Button>
 @@ -406,7 +406,7 @@ export default function AssetsPage() {
                    {companies.length === 0 && (
                      <TableRow>
@@ -13933,6 +14107,15 @@ index 9782d60..628432e 100644
              loaded={loaded}
              total={total}
              page={page}
+@@ -494,7 +494,7 @@ export default function AssetsPage() {
+                     size="icon"
+                     className="size-7 text-muted-foreground hover:text-destructive"
+                     onClick={() => openDelete([a.id])}
+-                    aria-label={`Delete asset ${a.ip || a.id}`}
++                    aria-label={`Asset löschen: ${a.ip || a.id}`}
+                   >
+                     <Trash2Icon className="size-3.5" />
+                   </Button>
 @@ -508,7 +508,7 @@ export default function AssetsPage() {
          <TabsContent value="subdomain" className="mt-0 flex min-h-0 flex-1 flex-col gap-2">
            {searchBox}
@@ -13960,6 +14143,15 @@ index 9782d60..628432e 100644
              loaded={loaded}
              total={total}
              page={page}
+@@ -576,7 +576,7 @@ export default function AssetsPage() {
+                     size="icon"
+                     className="size-7 text-muted-foreground hover:text-destructive"
+                     onClick={() => openDelete([a.id])}
+-                    aria-label={`Delete asset ${a.app_name || a.id}`}
++                    aria-label={`Asset löschen: ${a.app_name || a.id}`}
+                   >
+                     <Trash2Icon className="size-3.5" />
+                   </Button>
 @@ -590,7 +590,7 @@ export default function AssetsPage() {
          <TabsContent value="service" className="mt-0 flex min-h-0 flex-1 flex-col gap-2">
            {searchBox}
@@ -13969,6 +14161,15 @@ index 9782d60..628432e 100644
              loaded={loaded}
              total={total}
              page={page}
+@@ -671,7 +671,7 @@ export default function AssetsPage() {
+                       size="icon"
+                       className="size-7 text-muted-foreground hover:text-destructive"
+                       onClick={() => openDelete([a.id])}
+-                      aria-label={`Delete asset ${a.url || a.id}`}
++                      aria-label={`Asset löschen: ${a.url || a.id}`}
+                     >
+                       <Trash2Icon className="size-3.5" />
+                     </Button>
 @@ -686,7 +686,7 @@ export default function AssetsPage() {
          <TabsContent value="endpoint" className="mt-0 flex min-h-0 flex-1 flex-col gap-2">
            {searchBox}
@@ -13978,6 +14179,15 @@ index 9782d60..628432e 100644
              loaded={loaded}
              total={total}
              page={page}
+@@ -723,7 +723,7 @@ export default function AssetsPage() {
+                     size="icon"
+                     className="size-7 text-muted-foreground hover:text-destructive"
+                     onClick={() => openDelete([a.id])}
+-                    aria-label={`Delete asset ${a.url || a.id}`}
++                    aria-label={`Asset löschen: ${a.url || a.id}`}
+                   >
+                     <Trash2Icon className="size-3.5" />
+                   </Button>
 @@ -737,14 +737,14 @@ export default function AssetsPage() {
        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
          <AlertDialogContent>
@@ -14130,7 +14340,7 @@ index 9782d60..628432e 100644
            </Button>
          </SheetFooter>
        </SheetContent>
-@@ -1071,14 +1071,14 @@ function EditScopeDialog({ company, onSaved }: { company: Company; onSaved: () =
+@@ -1071,20 +1071,20 @@ function EditScopeDialog({ company, onSaved }: { company: Company; onSaved: () =
  
    const submit = async () => {
      if (parsedScope.errors.length > 0) {
@@ -14147,6 +14357,13 @@ index 9782d60..628432e 100644
        else toast.success(`Scope updated, ${res.added} entries`);
        showScopeWarnings(res.warnings);
        setOpen(false);
+       onSaved();
+     } catch (e) {
+-      toast.error(`Save failed: ${String((e as Error)?.message ?? e)}`);
++      toast.error(`Speichern fehlgeschlagen: ${String((e as Error)?.message ?? e)}`);
+     } finally {
+       setBusy(false);
+     }
 @@ -1094,14 +1094,14 @@ function EditScopeDialog({ company, onSaved }: { company: Company; onSaved: () =
      <Dialog open={open} onOpenChange={setOpen}>
        <DialogTrigger asChild>
@@ -14191,7 +14408,7 @@ index 9782d60..628432e 100644
            </Button>
          </DialogFooter>
        </DialogContent>
-@@ -1150,18 +1150,18 @@ function AppendScopeDialog({ company, onSaved }: { company: Company; onSaved: ()
+@@ -1150,24 +1150,24 @@ function AppendScopeDialog({ company, onSaved }: { company: Company; onSaved: ()
  
    const submit = async () => {
      if (parsedScope.rules.length === 0) {
@@ -14213,6 +14430,13 @@ index 9782d60..628432e 100644
        else toast.success(`Appended ${res.added} scope entries`);
        showScopeWarnings(res.warnings);
        setOpen(false);
+       onSaved();
+     } catch (e) {
+-      toast.error(`Save failed: ${String((e as Error)?.message ?? e)}`);
++      toast.error(`Speichern fehlgeschlagen: ${String((e as Error)?.message ?? e)}`);
+     } finally {
+       setBusy(false);
+     }
 @@ -1177,13 +1177,13 @@ function AppendScopeDialog({ company, onSaved }: { company: Company; onSaved: ()
      <Dialog open={open} onOpenChange={setOpen}>
        <DialogTrigger asChild>
@@ -14257,9 +14481,18 @@ index 9782d60..628432e 100644
          </DialogFooter>
        </DialogContent>
 diff --git a/web/src/app/(main)/function/commands/page.tsx b/web/src/app/(main)/function/commands/page.tsx
-index 4579493..579fe86 100644
+index 4579493..4870120 100644
 --- a/web/src/app/(main)/function/commands/page.tsx
 +++ b/web/src/app/(main)/function/commands/page.tsx
+@@ -17,7 +17,7 @@ import type { CommandRecord, ToolStat } from "@/lib/types";
+ import { cn } from "@/lib/utils";
+ 
+ function fmtTime(ts: string) {
+-  return new Date(ts).toLocaleString("zh-CN", {
++  return new Date(ts).toLocaleString("de-DE", {
+     month: "2-digit",
+     day: "2-digit",
+     hour: "2-digit",
 @@ -130,7 +130,7 @@ export default function CommandsPage() {
        <div className="flex items-center justify-between gap-4">
          <div className="flex items-center gap-2">
@@ -14374,6 +14607,15 @@ index 4579493..579fe86 100644
            ) : (
              <div className="-mr-2 max-h-[55vh] space-y-1 overflow-auto pr-2">
                {stats.map((s) => (
+@@ -309,7 +309,7 @@ export default function CommandsPage() {
+                     <div className="flex items-center gap-2">
+                       <span className="truncate font-mono text-xs font-medium">{s.tool}</span>
+                       {s.errors > 0 && (
+-                        <span className="text-[11px] tabular-nums text-red-600 dark:text-red-400">Failed {s.errors}</span>
++                        <span className="text-[11px] tabular-nums text-red-600 dark:text-red-400">Fehlgeschlagen {s.errors}</span>
+                       )}
+                     </div>
+                     <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
 @@ -337,7 +337,7 @@ export default function CommandsPage() {
            {selected && (
              <>
@@ -14540,9 +14782,18 @@ index 3f3e22b..8d254f7 100644
          </span>
        </span>
 diff --git a/web/src/app/(main)/function/findings/_components/findings-table.tsx b/web/src/app/(main)/function/findings/_components/findings-table.tsx
-index 7bd79e2..a511e33 100644
+index 7bd79e2..1cac35a 100644
 --- a/web/src/app/(main)/function/findings/_components/findings-table.tsx
 +++ b/web/src/app/(main)/function/findings/_components/findings-table.tsx
+@@ -78,7 +78,7 @@ export function isSameFinding(left: Finding, right: Finding): boolean {
+ }
+ 
+ export function fmtTime(ts: string) {
+-  return new Date(ts).toLocaleString("zh-CN", {
++  return new Date(ts).toLocaleString("de-DE", {
+     month: "2-digit",
+     day: "2-digit",
+     hour: "2-digit",
 @@ -130,7 +130,7 @@ export function FindingsTable({
    activeRetests,
    onDeepen,
@@ -14729,10 +14980,41 @@ index 7bd79e2..a511e33 100644
              </TableCell>
            </TableRow>
          )}
+diff --git a/web/src/app/(main)/function/findings/detail/lineage.tsx b/web/src/app/(main)/function/findings/detail/lineage.tsx
+index cae43a7..01e2a78 100644
+--- a/web/src/app/(main)/function/findings/detail/lineage.tsx
++++ b/web/src/app/(main)/function/findings/detail/lineage.tsx
+@@ -35,7 +35,7 @@ export function FindingLineageView({ findingId }: { findingId: string }) {
+   if (loaded && nodes.length === 0) {
+     return (
+       <p className="text-muted-foreground p-6 text-sm">
+-        No lineage to display (this finding has no linked exploration node, or its task has been deleted).
++        Keine Herkunftsdaten verfügbar. Der Fund ist mit keinem Knoten verknüpft oder die zugehörige Aufgabe wurde gelöscht.
+       </p>
+     );
+   }
+@@ -45,7 +45,7 @@ export function FindingLineageView({ findingId }: { findingId: string }) {
+       nodes={nodes}
+       edges={edges}
+       className="h-[68vh]"
+-      emptyHint={loaded ? "No lineage" : "Loading…"}
++      emptyHint={loaded ? "Keine Herkunftsdaten" : "Wird geladen …"}
+     />
+   );
+ }
 diff --git a/web/src/app/(main)/function/findings/detail/page.tsx b/web/src/app/(main)/function/findings/detail/page.tsx
-index bb843f4..1b82177 100644
+index bb843f4..9cd53be 100644
 --- a/web/src/app/(main)/function/findings/detail/page.tsx
 +++ b/web/src/app/(main)/function/findings/detail/page.tsx
+@@ -41,7 +41,7 @@ const FINDING_STATUSES: FindingStatus[] = [
+ ];
+ 
+ function fmtTime(ts: string) {
+-  return new Date(ts).toLocaleString("zh-CN");
++  return new Date(ts).toLocaleString("de-DE");
+ }
+ 
+ // FieldRow is one label/value line in the right-hand status panel.
 @@ -85,10 +85,10 @@ function FindingDetailInner() {
        try {
          const updated = await api.setFindingSeverity(id, next);
@@ -14902,7 +15184,7 @@ index bb843f4..1b82177 100644
                  </FieldRow>
                </CardContent>
 diff --git a/web/src/app/(main)/function/findings/page.tsx b/web/src/app/(main)/function/findings/page.tsx
-index 4112b36..9741bd3 100644
+index 4112b36..71acdcc 100644
 --- a/web/src/app/(main)/function/findings/page.tsx
 +++ b/web/src/app/(main)/function/findings/page.tsx
 @@ -179,7 +179,7 @@ export default function FindingsPage() {
@@ -15065,7 +15347,7 @@ index 4112b36..9741bd3 100644
              />
              <InputGroupAddon>
                <SearchIcon aria-hidden="true" />
-@@ -871,11 +871,11 @@ export default function FindingsPage() {
+@@ -871,14 +871,14 @@ export default function FindingsPage() {
            >
              {(
                [
@@ -15081,7 +15363,11 @@ index 4112b36..9741bd3 100644
 +                ["low", "Niedrig"],
                ] as const
              ).map(([val, label]) => (
-               <ToggleGroupItem key={val} value={val} aria-label={`Filter by ${label} severity`}>
+-              <ToggleGroupItem key={val} value={val} aria-label={`Filter by ${label} severity`}>
++              <ToggleGroupItem key={val} value={val} aria-label={`Nach Schweregrad „${label}“ filtern`}>
+                 {label}
+               </ToggleGroupItem>
+             ))}
 @@ -889,7 +889,7 @@ export default function FindingsPage() {
                <SelectValue placeholder="Status" />
              </SelectTrigger>
@@ -15251,8 +15537,10 @@ index 4112b36..9741bd3 100644
 +              <span className="text-xs text-muted-foreground">Exportumfang</span>
                <RadioGroup value={exportScope} onValueChange={(v) => setExportScope(v as typeof exportScope)}>
                  <label htmlFor="export-scope-filtered" className="flex items-center gap-2 text-sm">
-                   <RadioGroupItem id="export-scope-filtered" value="filtered" /> Export current filtered results ({filteredTotal}{" "}
-                   total)
+-                  <RadioGroupItem id="export-scope-filtered" value="filtered" /> Export current filtered results ({filteredTotal}{" "}
+-                  total)
++                  <RadioGroupItem id="export-scope-filtered" value="filtered" /> Gefilterte Ergebnisse exportieren ({filteredTotal}{" "}
++                  insgesamt)
                  </label>
                  <label htmlFor="export-scope-all" className="flex items-center gap-2 text-sm">
 -                  <RadioGroupItem id="export-scope-all" value="all" /> Export all
@@ -15300,8 +15588,132 @@ index 4112b36..9741bd3 100644
              </Button>
            </DialogFooter>
          </DialogContent>
+diff --git a/web/src/app/(main)/function/llm-records/page.tsx b/web/src/app/(main)/function/llm-records/page.tsx
+index 5669729..4188a3f 100644
+--- a/web/src/app/(main)/function/llm-records/page.tsx
++++ b/web/src/app/(main)/function/llm-records/page.tsx
+@@ -49,7 +49,7 @@ import { api } from "@/lib/api";
+ import type { LLMRecordItem, LLMRecordDetail, LLMTask } from "@/lib/types";
+ 
+ function fmtTime(ts: string) {
+-  return new Date(ts).toLocaleString("zh-CN", {
++  return new Date(ts).toLocaleString("de-DE", {
+     month: "2-digit",
+     day: "2-digit",
+     hour: "2-digit",
+@@ -270,7 +270,7 @@ export default function LLMRecordsPage() {
+         <div className="relative max-w-sm flex-1">
+           <SearchIcon className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+           <Input
+-            placeholder="Search session ID..."
++            placeholder="Sitzungs-ID suchen …"
+             value={session}
+             onChange={(e) => setSession(e.target.value)}
+             className="h-8 pl-8"
+@@ -284,12 +284,12 @@ export default function LLMRecordsPage() {
+         />
+         <Select value={pickedTask} onValueChange={setPickedTask}>
+           <SelectTrigger size="sm" className="w-56">
+-            <SelectValue placeholder="Select task…" />
++            <SelectValue placeholder="Aufgabe auswählen …" />
+           </SelectTrigger>
+           <SelectContent>
+             {tasks.length === 0 ? (
+               <SelectItem value="__none__" disabled>
+-                No task records
++                Keine Aufgaben aufgezeichnet
+               </SelectItem>
+             ) : (
+               tasks.map((t) => (
+@@ -310,7 +310,7 @@ export default function LLMRecordsPage() {
+           onClick={() => setDeleteOpen(true)}
+         >
+           <Trash2Icon className="size-3.5" />
+-          Delete task conversations
++          Konversationen der Aufgabe löschen
+         </Button>
+         <Select value={String(size)} onValueChange={(v) => setSize(Number(v))}>
+           <SelectTrigger size="sm" className="w-28">
+@@ -400,7 +400,7 @@ export default function LLMRecordsPage() {
+                 ) : records.length === 0 ? (
+                   <TableRow>
+                     <TableCell colSpan={8} className="py-12 text-center text-sm text-muted-foreground">
+-                      No LLM calls recorded
++                      Keine LLM-Aufrufe aufgezeichnet
+                     </TableCell>
+                   </TableRow>
+                 ) : (
+@@ -444,7 +444,7 @@ export default function LLMRecordsPage() {
+                         {rec.status === "ok" ? (
+                           <Badge variant="secondary" className="text-xs text-emerald-600">OK</Badge>
+                         ) : (
+-                          <Badge variant="destructive" className="text-xs">Error</Badge>
++                          <Badge variant="destructive" className="text-xs">Fehler</Badge>
+                         )}
+                       </TableCell>
+                     </TableRow>
+@@ -483,7 +483,7 @@ export default function LLMRecordsPage() {
+               {selected.status === "ok" ? (
+                 <Badge variant="secondary" className="text-xs text-emerald-600">OK</Badge>
+               ) : (
+-                <Badge variant="destructive" className="text-xs">Error</Badge>
++                <Badge variant="destructive" className="text-xs">Fehler</Badge>
+               )}
+               {/* Raw view toggle. Old records have no raw data, so it is disabled rather than silently falling back, to avoid the
+                       appearance that "raw and parsed are identical". */}
+@@ -510,14 +510,14 @@ export default function LLMRecordsPage() {
+             <div className="grid min-h-0 flex-1 grid-cols-2 divide-x">
+               <div className="flex min-h-0 min-w-0 flex-col">
+                 <div className="flex items-center gap-2 border-b py-0.5 pr-1.5 pl-3 text-[11px] font-medium text-muted-foreground">
+-                  <span>Request{showRaw && " · raw"}</span>
++                  <span>Anfrage{showRaw && " · Rohdaten"}</span>
+                   <CopyButton text={reqText || ""} />
+                 </div>
+                 <div className="min-h-0 flex-1 overflow-auto">
+                   {detailLoading ? (
+                     <div className="flex items-center gap-2 p-3 text-xs text-muted-foreground">
+                       <Loader2Icon className="size-3.5 animate-spin" />
+-                      Loading…
++                      Wird geladen …
+                     </div>
+                   ) : (
+                     <pre className="p-3 font-mono text-xs break-all whitespace-pre-wrap">
+@@ -528,14 +528,14 @@ export default function LLMRecordsPage() {
+               </div>
+               <div className="flex min-h-0 min-w-0 flex-col">
+                 <div className="flex items-center gap-2 border-b py-0.5 pr-1.5 pl-3 text-[11px] font-medium text-muted-foreground">
+-                  <span>Response{showRaw && " · raw (SSE)"}</span>
++                  <span>Antwort{showRaw && " · Rohdaten (SSE)"}</span>
+                   <CopyButton text={respText || ""} />
+                 </div>
+                 <div className="min-h-0 flex-1 overflow-auto">
+                   {detailLoading ? (
+                     <div className="flex items-center gap-2 p-3 text-xs text-muted-foreground">
+                       <Loader2Icon className="size-3.5 animate-spin" />
+-                      Loading…
++                      Wird geladen …
+                     </div>
+                   ) : (
+                     <pre className={cn(
+@@ -555,13 +555,13 @@ export default function LLMRecordsPage() {
+       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+         <AlertDialogContent>
+           <AlertDialogHeader>
+-            <AlertDialogTitle>Delete all LLM conversations for task "{pickedTask}"?</AlertDialogTitle>
++            <AlertDialogTitle>Alle LLM-Konversationen der Aufgabe „{pickedTask}“ löschen?</AlertDialogTitle>
+             <AlertDialogDescription>
+-              This permanently deletes all LLM call records for this task (including raw request/response). This action cannot be undone.
++              Alle LLM-Aufzeichnungen dieser Aufgabe werden endgültig gelöscht, einschließlich der ursprünglichen Anfragen und Antworten. Das lässt sich nicht rückgängig machen.
+             </AlertDialogDescription>
+           </AlertDialogHeader>
+           <AlertDialogFooter>
+-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
++            <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
+             <AlertDialogAction
+               onClick={(e) => {
+                 e.preventDefault();
 diff --git a/web/src/app/(main)/function/sync/page.tsx b/web/src/app/(main)/function/sync/page.tsx
-index a0d2852..29afe0f 100644
+index a0d2852..08914e1 100644
 --- a/web/src/app/(main)/function/sync/page.tsx
 +++ b/web/src/app/(main)/function/sync/page.tsx
 @@ -28,8 +28,8 @@ type SSStatus = {
@@ -15472,11 +15884,13 @@ index a0d2852..29afe0f 100644
    }, [dimension, page, search]);
  
    React.useEffect(() => {
-@@ -267,7 +267,7 @@ function SyncWorkbench() {
+@@ -266,8 +266,8 @@ function SyncWorkbench() {
+   const chosenTypes = ASSET_TYPES.filter((t) => assetTypes[t.key]).map((t) => t.key);
  
    const runSync = async () => {
-     if (selected.size === 0) return toast.error(`Select at least one ${dimension === "project" ? "project" : "task"}`);
+-    if (selected.size === 0) return toast.error(`Select at least one ${dimension === "project" ? "project" : "task"}`);
 -    if (chosenTypes.length === 0) return toast.error("Select at least one asset type");
++    if (selected.size === 0) return toast.error(`Wählen Sie mindestens ${dimension === "project" ? "ein Projekt" : "eine Aufgabe"} aus`);
 +    if (chosenTypes.length === 0) return toast.error("Mindestens einen Asset-Typ auswählen");
      setSyncing(true);
      setResult(null);
@@ -15633,7 +16047,7 @@ index a0d2852..29afe0f 100644
        )}
      </div>
 diff --git a/web/src/app/(main)/function/tasks/detail/_tabs/assets-tab.tsx b/web/src/app/(main)/function/tasks/detail/_tabs/assets-tab.tsx
-index 21107b8..34dd6ef 100644
+index 21107b8..6b64592 100644
 --- a/web/src/app/(main)/function/tasks/detail/_tabs/assets-tab.tsx
 +++ b/web/src/app/(main)/function/tasks/detail/_tabs/assets-tab.tsx
 @@ -57,12 +57,12 @@ const METHOD_COLOR: Record<string, string> = {
@@ -15661,6 +16075,15 @@ index 21107b8..34dd6ef 100644
    return (
      <Tooltip>
        <TooltipTrigger asChild>
+@@ -192,7 +192,7 @@ function AssetCard({
+     tableRows = (
+       <TableRow>
+         <TableCell colSpan={cols.length} className="py-10 text-center text-muted-foreground text-sm">
+-          No test assets in this category
++          Keine Test-Assets in dieser Kategorie
+         </TableCell>
+       </TableRow>
+     );
 @@ -243,7 +243,7 @@ function AssetCard({
                  size="icon-sm"
                  disabled={page <= 0}
@@ -15693,16 +16116,21 @@ index 21107b8..34dd6ef 100644
      } finally {
        setSaving(false);
      }
-@@ -307,7 +307,7 @@ function AddTaskAssetsSheet({
+@@ -307,10 +307,10 @@ function AddTaskAssetsSheet({
      <Sheet open={open} onOpenChange={onOpenChange}>
        <SheetContent className="w-full sm:max-w-xl">
          <SheetHeader>
 -          <SheetTitle>Add test assets</SheetTitle>
 +          <SheetTitle>Test-Assets hinzufügen</SheetTitle>
            <SheetDescription>
-             Enter the test scope directly. Domains and IPs create or reuse global assets; CIDRs, ICP records,
-             and keywords are passed to the agent as scope context.
-@@ -319,8 +319,8 @@ function AddTaskAssetsSheet({
+-            Enter the test scope directly. Domains and IPs create or reuse global assets; CIDRs, ICP records,
+-            and keywords are passed to the agent as scope context.
++            Geben Sie den Testumfang direkt ein. Domains und IP-Adressen werden als globale Assets angelegt oder wiederverwendet.
++            CIDR-Netze, ICP-Einträge und Stichwörter dienen dem Agenten als Kontext für den Testumfang.
+           </SheetDescription>
+         </SheetHeader>
+         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4">
+@@ -319,13 +319,13 @@ function AddTaskAssetsSheet({
              value={scopeText}
              onValueChange={setScopeText}
              parsed={parsedScope}
@@ -15713,6 +16141,12 @@ index 21107b8..34dd6ef 100644
            />
          </div>
          <SheetFooter>
+           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+-            Cancel
++            Abbrechen
+           </Button>
+           <Button
+             onClick={() => void attach()}
 @@ -405,7 +405,7 @@ export function AssetsTab({ taskId }: { taskId: string }) {
            setRows([]);
            setTotal(0);
@@ -15736,11 +16170,13 @@ index 21107b8..34dd6ef 100644
      } finally {
        setRemoving(false);
      }
-@@ -455,7 +455,7 @@ export function AssetsTab({ taskId }: { taskId: string }) {
+@@ -454,8 +454,8 @@ export function AssetsTab({ taskId }: { taskId: string }) {
+       variant="ghost"
        size="icon-sm"
        onClick={() => setRemoveTarget(asset)}
-       aria-label={`Remove asset ${assetLabel(asset)} from task`}
+-      aria-label={`Remove asset ${assetLabel(asset)} from task`}
 -      title="Remove from task"
++      aria-label={`Asset „${assetLabel(asset)}“ aus der Aufgabe entfernen`}
 +      title="Aus Aufgabe entfernen"
      >
        <Trash2Icon />
@@ -15815,15 +16251,24 @@ index 21107b8..34dd6ef 100644
              {rows.map((asset) => (
                <TableRow key={asset.id}>
                  <TableCell className="w-16">
-@@ -683,7 +683,7 @@ export function AssetsTab({ taskId }: { taskId: string }) {
+@@ -681,14 +681,14 @@ export function AssetsTab({ taskId }: { taskId: string }) {
+       <AlertDialog open={Boolean(removeTarget)} onOpenChange={(open) => !open && !removing && setRemoveTarget(null)}>
+         <AlertDialogContent>
            <AlertDialogHeader>
-             <AlertDialogTitle>Remove from current task?</AlertDialogTitle>
+-            <AlertDialogTitle>Remove from current task?</AlertDialogTitle>
++            <AlertDialogTitle>Aus der aktuellen Aufgabe entfernen?</AlertDialogTitle>
              <AlertDialogDescription className="[overflow-wrap:anywhere]">
 -              {removeTarget ? `Remove "${assetLabel(removeTarget)}" from the current task's test assets.` : ""}
 +              {removeTarget ? `„${assetLabel(removeTarget)}“ aus den Test-Assets der aktuellen Aufgabe entfernen.` : ""}
                Global assets, linked traffic, and historical blackboard anchors are kept.
              </AlertDialogDescription>
            </AlertDialogHeader>
+           <AlertDialogFooter>
+-            <AlertDialogCancel disabled={removing}>Cancel</AlertDialogCancel>
++            <AlertDialogCancel disabled={removing}>Abbrechen</AlertDialogCancel>
+             <AlertDialogAction
+               variant="destructive"
+               disabled={removing}
 @@ -698,7 +698,7 @@ export function AssetsTab({ taskId }: { taskId: string }) {
                }}
              >
@@ -15834,7 +16279,7 @@ index 21107b8..34dd6ef 100644
            </AlertDialogFooter>
          </AlertDialogContent>
 diff --git a/web/src/app/(main)/function/tasks/detail/_tabs/broadcast-tab.tsx b/web/src/app/(main)/function/tasks/detail/_tabs/broadcast-tab.tsx
-index 1d1db2b..3302ef1 100644
+index 1d1db2b..9d97bd4 100644
 --- a/web/src/app/(main)/function/tasks/detail/_tabs/broadcast-tab.tsx
 +++ b/web/src/app/(main)/function/tasks/detail/_tabs/broadcast-tab.tsx
 @@ -45,89 +45,89 @@ type KindMeta = { label: string; icon: LucideIcon; dot: string; chip: string };
@@ -15960,7 +16405,7 @@ index 1d1db2b..3302ef1 100644
    try {
      return JSON.stringify(JSON.parse(raw), null, 2);
    } catch {
-@@ -172,7 +172,7 @@ function prettyPayload(raw?: string): string {
+@@ -172,14 +172,14 @@ function prettyPayload(raw?: string): string {
  function relTime(ts: number, now: number): string {
    if (!now || !ts) return "";
    const sec = Math.max(0, (now - ts) / 1000);
@@ -15969,6 +16414,15 @@ index 1d1db2b..3302ef1 100644
    if (sec < 3600) return `${Math.floor(sec / 60)} min ago`;
    if (sec < 86400) return `${Math.floor(sec / 3600)} h ago`;
    return `${Math.floor(sec / 86400)} d ago`;
+ }
+ 
+-const dayFmt = new Intl.DateTimeFormat("zh-CN", { month: "long", day: "numeric", weekday: "short" });
+-const clockFmt = new Intl.DateTimeFormat("zh-CN", {
++const dayFmt = new Intl.DateTimeFormat("de-DE", { month: "long", day: "numeric", weekday: "short" });
++const clockFmt = new Intl.DateTimeFormat("de-DE", {
+   hour: "2-digit",
+   minute: "2-digit",
+   second: "2-digit",
 @@ -217,7 +217,7 @@ function AssetList({ assets, dense = false }: { assets: FindingAsset[]; dense?:
    if (assets.length === 0) return null;
    return (
@@ -15984,9 +16438,10 @@ index 1d1db2b..3302ef1 100644
        <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
 -        <span>Type {meta.label}</span>
 -        <span>Source {node.origin || "system"}</span>
+-        <span>{Number.isNaN(ts) ? node.ts : new Date(ts).toLocaleString("zh-CN")}</span>
 +        <span>Typ {meta.label}</span>
 +        <span>Quelle {node.origin || "System"}</span>
-         <span>{Number.isNaN(ts) ? node.ts : new Date(ts).toLocaleString("zh-CN")}</span>
++        <span>{Number.isNaN(ts) ? node.ts : new Date(ts).toLocaleString("de-DE")}</span>
        </div>
 -      <p className="line-clamp-4 text-xs break-words">{summary || "(no summary)"}</p>
 +      <p className="line-clamp-4 text-xs break-words">{summary || "(keine Zusammenfassung)"}</p>
@@ -16036,9 +16491,10 @@ index 1d1db2b..3302ef1 100644
                </span>
 -              <span>Type {meta.label}</span>
 -              <span>Source {node.origin || "system"}</span>
+-              <span>{Number.isNaN(ts) ? node.ts : new Date(ts).toLocaleString("zh-CN")}</span>
 +              <span>Typ {meta.label}</span>
 +              <span>Quelle {node.origin || "System"}</span>
-               <span>{Number.isNaN(ts) ? node.ts : new Date(ts).toLocaleString("zh-CN")}</span>
++              <span>{Number.isNaN(ts) ? node.ts : new Date(ts).toLocaleString("de-DE")}</span>
              </div>
              {node.state === "deleted" && node.delete_reason && (
                <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs">
@@ -16311,7 +16767,7 @@ index 4589b9a..d60409b 100644
        </div>
  
 diff --git a/web/src/app/(main)/function/tasks/detail/_tabs/findings-tab.tsx b/web/src/app/(main)/function/tasks/detail/_tabs/findings-tab.tsx
-index 0b7c3f5..5b43bd3 100644
+index 0b7c3f5..63eb07b 100644
 --- a/web/src/app/(main)/function/tasks/detail/_tabs/findings-tab.tsx
 +++ b/web/src/app/(main)/function/tasks/detail/_tabs/findings-tab.tsx
 @@ -25,7 +25,7 @@ const FINDING_SORT_PREFERENCE_KEY = "artex_task_findings_sort";
@@ -16340,6 +16796,15 @@ index 0b7c3f5..5b43bd3 100644
          {f.assets && f.assets.length > 0 && (
            <div className="hidden shrink-0 flex-wrap justify-end gap-1 sm:flex">
              {f.assets.slice(0, 2).map((a) => (
+@@ -108,7 +108,7 @@ function Row({
+           <StatusBadge domain="finding" value={f.status} dot />
+         )}
+         <span className="hidden shrink-0 text-xs text-muted-foreground md:block">
+-          {new Date(f.ts).toLocaleString("zh-CN")}
++          {new Date(f.ts).toLocaleString("de-DE")}
+         </span>
+         {f.finding_id && (
+           <Link
 @@ -118,7 +118,7 @@ function Row({
                  : `/function/findings/detail?id=${f.finding_id}`
              }
@@ -16404,7 +16869,7 @@ index 0b7c3f5..5b43bd3 100644
        </CardContent>
      </Card>
 diff --git a/web/src/app/(main)/function/tasks/detail/_tabs/overview-tab.tsx b/web/src/app/(main)/function/tasks/detail/_tabs/overview-tab.tsx
-index 1e00664..5448fe0 100644
+index 1e00664..4807235 100644
 --- a/web/src/app/(main)/function/tasks/detail/_tabs/overview-tab.tsx
 +++ b/web/src/app/(main)/function/tasks/detail/_tabs/overview-tab.tsx
 @@ -64,19 +64,19 @@ function scopeValue(row: TaskScopeRow): string {
@@ -16747,7 +17212,7 @@ index 1e00664..5448fe0 100644
              <StatusBadge
                domain="engine"
                value={stats?.engine_mode ?? task?.engine_mode ?? "idle"}
-@@ -911,11 +911,11 @@ export function OverviewTab({ taskId }: { taskId: string }) {
+@@ -911,28 +911,28 @@ export function OverviewTab({ taskId }: { taskId: string }) {
              />
            </div>
            <div>
@@ -16760,8 +17225,9 @@ index 1e00664..5448fe0 100644
 +            <div className="text-xs text-muted-foreground">Letzte Aktivität</div>
              <div className="mt-1 inline-flex items-center gap-1 text-sm">
                <ClockIcon className="size-3.5" />
-               {task?.last_activity ? new Date(task.last_activity).toLocaleTimeString("zh-CN") : "—"}
-@@ -923,13 +923,13 @@ export function OverviewTab({ taskId }: { taskId: string }) {
+-              {task?.last_activity ? new Date(task.last_activity).toLocaleTimeString("zh-CN") : "—"}
++              {task?.last_activity ? new Date(task.last_activity).toLocaleTimeString("de-DE") : "—"}
+             </div>
            </div>
            <div>
              <div className="text-xs text-muted-foreground">
@@ -16776,7 +17242,11 @@ index 1e00664..5448fe0 100644
 +              <div className="text-xs text-muted-foreground">Abgeschlossen am</div>
                <div className="mt-1 inline-flex items-center gap-1 text-sm">
                  <ClockIcon className="size-3.5" />
-                 {new Date(task.completed_unix * 1000).toLocaleString("zh-CN")}
+-                {new Date(task.completed_unix * 1000).toLocaleString("zh-CN")}
++                {new Date(task.completed_unix * 1000).toLocaleString("de-DE")}
+               </div>
+             </div>
+           ) : null}
 @@ -944,7 +944,7 @@ export function OverviewTab({ taskId }: { taskId: string }) {
          <Card>
            <CardHeader>
@@ -17940,7 +18410,7 @@ index 7eafb93..3339f4e 100644
                </AlertDialogContent>
              </AlertDialog>
 diff --git a/web/src/app/(main)/function/tasks/page.tsx b/web/src/app/(main)/function/tasks/page.tsx
-index 43a777e..3142a8a 100644
+index 43a777e..e317090 100644
 --- a/web/src/app/(main)/function/tasks/page.tsx
 +++ b/web/src/app/(main)/function/tasks/page.tsx
 @@ -229,13 +229,13 @@ function fmtDateTime(unix?: number): string {
@@ -18021,6 +18491,15 @@ index 43a777e..3142a8a 100644
            .join("; ")}`,
        );
      }
+@@ -715,7 +715,7 @@ export default function TasksPage() {
+     async (action: "pause" | "resume", ids: string[]) => {
+       if (ids.length === 0 || batchControlling) return;
+       if (ids.length > 100) {
+-        toast.error("You can control at most 100 tasks at a time");
++        toast.error("Sie können höchstens 100 Aufgaben gleichzeitig bearbeiten");
+         return;
+       }
+       setBatchControlling(action);
 @@ -733,7 +733,7 @@ export default function TasksPage() {
          if (failed.length > 0) {
            const details = failed
@@ -18030,6 +18509,15 @@ index 43a777e..3142a8a 100644
              .join("; ");
            toast.error(`${failed.length} tasks failed: ${details}${failed.length > 3 ? " etc." : ""}`);
          }
+@@ -755,7 +755,7 @@ export default function TasksPage() {
+       const ids = [...selectedIds];
+       if (ids.length === 0 || movingCategory) return;
+       if (ids.length > 100) {
+-        toast.error("You can change the category of at most 100 tasks at a time");
++        toast.error("Sie können die Kategorie für höchstens 100 Aufgaben gleichzeitig ändern");
+         return;
+       }
+       setMovingCategory(true);
 @@ -763,7 +763,7 @@ export default function TasksPage() {
          const result = await api.updateTasksCategory(ids, categoryID);
          const succeeded = result.items.filter((item) => item.ok);
@@ -18039,6 +18527,15 @@ index 43a777e..3142a8a 100644
          if (succeeded.length > 0) {
            toast.success(`Moved ${succeeded.length} tasks to "${target}"`);
            setSelectedIds(new Set());
+@@ -777,7 +777,7 @@ export default function TasksPage() {
+         }
+         refreshCategoriesAndTasks();
+       } catch (error) {
+-        toast.error(`Failed to change category: ${(error as Error).message}`);
++        toast.error(`Kategorie konnte nicht geändert werden: ${(error as Error).message}`);
+       } finally {
+         setMovingCategory(false);
+       }
 @@ -788,8 +788,8 @@ export default function TasksPage() {
    return (
      <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-4">
@@ -18059,6 +18556,15 @@ index 43a777e..3142a8a 100644
                    value={query}
                    onChange={(e) => setQuery(e.target.value)}
                    className="pl-8"
+@@ -807,7 +807,7 @@ export default function TasksPage() {
+                   <button
+                     type="button"
+                     onClick={() => setQuery("")}
+-                    aria-label="Clear search"
++                    aria-label="Suche zurücksetzen"
+                     className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2"
+                   >
+                     <XIcon className="size-4" />
 @@ -820,7 +820,7 @@ export default function TasksPage() {
                  </SelectTrigger>
                  <SelectContent>
@@ -18093,6 +18599,24 @@ index 43a777e..3142a8a 100644
                    </Button>
                    {pausableTaskIDs.length > 0 && (
                      <Button
+@@ -866,7 +866,7 @@ export default function TasksPage() {
+                       ) : (
+                         <PauseIcon data-icon="inline-start" />
+                       )}
+-                      Pause {pausableTaskIDs.length}
++                      Pausieren ({pausableTaskIDs.length})
+                     </Button>
+                   )}
+                   {resumableTaskIDs.length > 0 && (
+@@ -881,7 +881,7 @@ export default function TasksPage() {
+                       ) : (
+                         <PlayIcon data-icon="inline-start" />
+                       )}
+-                      Resume {resumableTaskIDs.length}
++                      Fortsetzen ({resumableTaskIDs.length})
+                     </Button>
+                   )}
+                   {archivableTaskIDs.length > 0 && (
 @@ -891,7 +891,7 @@ export default function TasksPage() {
                        trigger={
                          <Button size="sm" variant="outline">
@@ -18116,6 +18640,15 @@ index 43a777e..3142a8a 100644
                </div>
              ) : (
                <Table className="**:data-[slot='table-cell']:px-4 **:data-[slot='table-head']:px-4">
+@@ -936,7 +936,7 @@ export default function TasksPage() {
+                       <Checkbox
+                         checked={headerChecked}
+                         onCheckedChange={(checked) => toggleSelectedPage(checked === true)}
+-                        aria-label="Select all tasks on this page"
++                        aria-label="Alle Aufgaben auf dieser Seite auswählen"
+                       />
+                     </TableHead>
+                     <SortableTaskHead
 @@ -948,8 +948,8 @@ export default function TasksPage() {
                        onSort={sortTasksBy}
                      />
@@ -18218,7 +18751,7 @@ index 43a777e..3142a8a 100644
            </Button>
          </DialogFooter>
        </DialogContent>
-@@ -1187,7 +1187,7 @@ const TaskRow = React.memo(function TaskRow({
+@@ -1187,12 +1187,12 @@ const TaskRow = React.memo(function TaskRow({
    onSelectedChange: (id: string, checked: boolean) => void;
  }) {
    return (
@@ -18227,6 +18760,12 @@ index 43a777e..3142a8a 100644
        <TableCell>
          <Checkbox
            checked={selected}
+           onCheckedChange={(checked) => onSelectedChange(task.id, checked === true)}
+-          aria-label={`Select task ${task.id}`}
++          aria-label={`Aufgabe ${task.id} auswählen`}
+         />
+       </TableCell>
+       <TableCell>
 @@ -1202,7 +1202,7 @@ const TaskRow = React.memo(function TaskRow({
          <div className="flex max-w-xs items-center gap-2">
            <TaskNameEditor task={task} onRename={onRename} />
@@ -18236,6 +18775,24 @@ index 43a777e..3142a8a 100644
          </div>
        </TableCell>
        <TableCell className="text-muted-foreground max-w-40">
+@@ -1273,7 +1273,7 @@ const TaskRow = React.memo(function TaskRow({
+         className="text-right text-xs whitespace-nowrap tabular-nums"
+         title={
+           task.tokens
+-            ? `Input ${task.tokens.input_tokens} · Cache ${task.tokens.cache_read_tokens} · Output ${task.tokens.output_tokens}`
++            ? `Eingabe ${task.tokens.input_tokens} · Cache ${task.tokens.cache_read_tokens} · Ausgabe ${task.tokens.output_tokens}`
+             : undefined
+         }
+       >
+@@ -1282,7 +1282,7 @@ const TaskRow = React.memo(function TaskRow({
+             In <span className="text-foreground">{fmtTokens(task.tokens.input_tokens)}</span>
+             {" · Cache "}
+             <span className="text-foreground">{fmtTokens(task.tokens.cache_read_tokens)}</span>
+-            {" · Out "}
++            {" · Ausgabe "}
+             <span className="text-foreground">{fmtTokens(task.tokens.output_tokens)}</span>
+           </span>
+         ) : (
 @@ -1291,7 +1291,7 @@ const TaskRow = React.memo(function TaskRow({
        </TableCell>
        <TableCell className="sticky right-0 z-10 bg-card text-right shadow-[-1px_0_0_0_hsl(var(--border))] group-hover:bg-muted/50">
@@ -18245,7 +18802,7 @@ index 43a777e..3142a8a 100644
              <Link href={`/function/tasks/detail?id=${encodeURIComponent(task.id)}`}>
                <EyeIcon />
              </Link>
-@@ -1380,7 +1380,7 @@ function TaskNameEditor({ task, onRename }: { task: Task; onRename: (task: Task,
+@@ -1380,15 +1380,15 @@ function TaskNameEditor({ task, onRename }: { task: Task; onRename: (task: Task,
          className="min-w-0 truncate rounded-sm hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
          title={task.name?.trim() ? task.name : task.description}
        >
@@ -18254,6 +18811,16 @@ index 43a777e..3142a8a 100644
        </Link>
        <Button
          type="button"
+         variant="ghost"
+         size="icon-xs"
+         className="shrink-0 opacity-100 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-focus-within:opacity-100 [@media(hover:hover)]:group-hover:opacity-100"
+-        aria-label={`Rename task #${task.id}`}
+-        title="Rename"
++        aria-label={`Aufgabe #${task.id} umbenennen`}
++        title="Umbenennen"
+         onClick={() => {
+           setName(task.name ?? "");
+           setEditing(true);
 @@ -1417,7 +1417,7 @@ function TaskPinAction({ task, onTogglePinned }: { task: Task; onTogglePinned: (
        size="icon"
        disabled={pinning}
@@ -18316,6 +18883,15 @@ index 43a777e..3142a8a 100644
            </AlertDialogAction>
          </AlertDialogFooter>
        </AlertDialogContent>
+@@ -1531,7 +1531,7 @@ function ArchiveConfirmDialog({
+ function TaskArchiveAction({ task, onArchive }: { task: Task; onArchive: (task: Task) => Promise<void> }) {
+   const reason = archiveBlockReason(task);
+   const trigger = (
+-    <Button size="icon" variant="ghost" disabled={Boolean(reason)} aria-label={`Archive task #${task.id}`}>
++    <Button size="icon" variant="ghost" disabled={Boolean(reason)} aria-label={`Aufgabe #${task.id} archivieren`}>
+       <ArchiveIcon />
+     </Button>
+   );
 @@ -1561,16 +1561,16 @@ const ARCHIVE_FAILED_STATES = new Set<TaskArchiveState>(["archive_failed", "rest
  
  function archiveStateLabel(state: TaskArchiveState): string {
@@ -18343,7 +18919,24 @@ index 43a777e..3142a8a 100644
    };
    return labels[state];
  }
-@@ -1632,7 +1632,7 @@ function ArchiveDeleteDialog({
+@@ -1594,7 +1594,7 @@ function formatArchiveBytes(bytes: number): string {
+ function archiveCompressionLabel(archive: TaskArchive): string {
+   if (archive.original_size <= 0 || archive.compressed_size <= 0) return "—";
+   const saved = Math.max(0, 100 - (archive.compressed_size / archive.original_size) * 100);
+-  return `${formatArchiveBytes(archive.compressed_size)} · ${saved.toFixed(0)}% saved`;
++  return `${formatArchiveBytes(archive.compressed_size)} · ${saved.toFixed(0)} % kleiner`;
+ }
+ 
+ function archiveDataTotal(archive: TaskArchive): number {
+@@ -1626,13 +1626,13 @@ function ArchiveDeleteDialog({
+       <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+       <AlertDialogContent>
+         <AlertDialogHeader>
+-          <AlertDialogTitle>Permanently delete {archives.length} task archives?</AlertDialogTitle>
++          <AlertDialogTitle>Aufgabenarchive endgültig löschen ({archives.length})?</AlertDialogTitle>
+           <AlertDialogDescription className="[overflow-wrap:anywhere]">
+-            Permanently deletes about {formatArchiveBytes(bytes)} of archive packages and {rows.toLocaleString()} related data snapshots. This action cannot be undone.
++            Dadurch werden rund {formatArchiveBytes(bytes)} an Archivpaketen und {rows.toLocaleString()} zugehörige Datensicherungen endgültig gelöscht. Das lässt sich nicht rückgängig machen.
            </AlertDialogDescription>
          </AlertDialogHeader>
          <AlertDialogFooter>
@@ -18466,8 +19059,21 @@ index 43a777e..3142a8a 100644
                      </Button>
                    }
                  />
-@@ -1887,14 +1887,14 @@ function TaskArchivesPanel({ onChanged }: { onChanged: () => void }) {
-                     aria-label="Select archives on this page"
+@@ -1870,7 +1870,7 @@ function TaskArchivesPanel({ onChanged }: { onChanged: () => void }) {
+         ) : archives.length === 0 ? (
+           <Empty className="mx-4 border border-dashed lg:mx-6">
+             <EmptyHeader>
+-              <EmptyTitle>No task archives</EmptyTitle>
++              <EmptyTitle>Keine Aufgabenarchive</EmptyTitle>
+               <EmptyDescription>Paused or terminal tasks can be archived from the current task list.</EmptyDescription>
+             </EmptyHeader>
+           </Empty>
+@@ -1884,17 +1884,17 @@ function TaskArchivesPanel({ onChanged }: { onChanged: () => void }) {
+                     onCheckedChange={(checked) =>
+                       setSelected(checked === true ? new Set(selectable.map((archive) => archive.id)) : new Set())
+                     }
+-                    aria-label="Select archives on this page"
++                    aria-label="Archive auf dieser Seite auswählen"
                    />
                  </TableHead>
 -                <TableHead>Task</TableHead>
@@ -18498,6 +19104,15 @@ index 43a777e..3142a8a 100644
                      <TableCell>
                        <Checkbox
                          checked={selected.has(archive.id)}
+@@ -1916,7 +1916,7 @@ function TaskArchivesPanel({ onChanged }: { onChanged: () => void }) {
+                             return next;
+                           })
+                         }
+-                        aria-label={`Select task archive #${archive.task_id}`}
++                        aria-label={`Archiv der Aufgabe #${archive.task_id} auswählen`}
+                       />
+                     </TableCell>
+                     <TableCell className="max-w-sm">
 @@ -1932,7 +1932,7 @@ function TaskArchivesPanel({ onChanged }: { onChanged: () => void }) {
                      <TableCell>
                        <StatusBadge domain="task" value={archive.original_status} dot />
@@ -18507,11 +19122,13 @@ index 43a777e..3142a8a 100644
                      <TableCell className="text-muted-foreground whitespace-nowrap text-xs">
                        {archiveDate(archive.archived_at || archive.requested_at)}
                      </TableCell>
-@@ -1971,7 +1971,7 @@ function TaskArchivesPanel({ onChanged }: { onChanged: () => void }) {
+@@ -1970,8 +1970,8 @@ function TaskArchivesPanel({ onChanged }: { onChanged: () => void }) {
+                             size="icon"
                              variant="ghost"
                              onClick={() => void retry(archive)}
-                             aria-label="Retry archive operation"
+-                            aria-label="Retry archive operation"
 -                            title="Retry"
++                            aria-label="Archivvorgang wiederholen"
 +                            title="Erneut versuchen"
                            >
                              <Undo2Icon />
@@ -18532,7 +19149,7 @@ index 43a777e..3142a8a 100644
                              onConfirm={() => deleteMany([archive])}
                              trigger={
 -                              <Button size="icon" variant="ghost" aria-label="Permanently delete archive" title="Permanently delete">
-+                              <Button size="icon" variant="ghost" aria-label="Permanently delete archive" title="Endgültig löschen">
++                              <Button size="icon" variant="ghost" aria-label="Archiv endgültig löschen" title="Endgültig löschen">
                                  <Trash2Icon />
                                </Button>
                              }
@@ -18611,16 +19228,35 @@ index 43a777e..3142a8a 100644
            </FieldContent>
          </Field>
        </FieldGroup>
-@@ -2184,7 +2184,7 @@ function DeleteTaskDialog({
+@@ -2178,15 +2178,15 @@ function DeleteTaskDialog({
+   return (
+     <AlertDialog open={open} onOpenChange={handleOpenChange}>
+       <AlertDialogTrigger asChild>
+-        <Button size="icon" variant="outline" aria-label="Delete task">
++        <Button size="icon" variant="outline" aria-label="Aufgabe löschen">
+           <Trash2Icon className="text-destructive" />
+         </Button>
        </AlertDialogTrigger>
        <AlertDialogContent>
          <AlertDialogHeader>
 -          <AlertDialogTitle>Delete task #{task.id}?</AlertDialogTitle>
 +          <AlertDialogTitle>Aufgabe #{task.id} löschen?</AlertDialogTitle>
            <AlertDialogDescription className="break-words">
-             {task.description ? (
+-            {task.description ? (
++            Beim Löschen der Aufgabe {task.description ? (
                <>
-@@ -2202,7 +2202,7 @@ function DeleteTaskDialog({
+                 "
+                 <span className="break-all">
+@@ -2195,14 +2195,14 @@ function DeleteTaskDialog({
+                 "
+               </>
+             ) : (
+-              "This task "
++              ""
+             )}
+-            execution history and exploration graph will be permanently deleted.
++            werden auch der Ausführungsverlauf und der Erkundungsgraph endgültig gelöscht.
+           </AlertDialogDescription>
          </AlertDialogHeader>
          <DeleteOptionFields idPrefix={task.id} options={options} onOptionsChange={setOptions} disabled={deleting} />
          <AlertDialogFooter>
@@ -18638,7 +19274,13 @@ index 43a777e..3142a8a 100644
            </AlertDialogAction>
          </AlertDialogFooter>
        </AlertDialogContent>
-@@ -2255,18 +2255,18 @@ function MoveTasksCategoryDialog({
+@@ -2250,23 +2250,23 @@ function MoveTasksCategoryDialog({
+     <Dialog open={open} onOpenChange={handleOpenChange}>
+       <DialogTrigger asChild>
+         <Button size="sm" variant="outline">
+-          <FolderInputIcon data-icon="inline-start" /> Change category
++          <FolderInputIcon data-icon="inline-start" /> Kategorie ändern
+         </Button>
        </DialogTrigger>
        <DialogContent>
          <DialogHeader>
@@ -18686,7 +19328,13 @@ index 43a777e..3142a8a 100644
            </Button>
          </DialogFooter>
        </DialogContent>
-@@ -2339,9 +2339,9 @@ function BulkDeleteTasksDialog({
+@@ -2334,14 +2334,14 @@ function BulkDeleteTasksDialog({
+     <AlertDialog open={open} onOpenChange={handleOpenChange}>
+       <AlertDialogTrigger asChild>
+         <Button size="sm" variant="outline">
+-          <Trash2Icon className="text-destructive" /> Delete selected {ids.length}
++          <Trash2Icon className="text-destructive" /> Auswahl löschen {ids.length}
+         </Button>
        </AlertDialogTrigger>
        <AlertDialogContent className="max-h-[85vh] overflow-y-auto">
          <AlertDialogHeader>
@@ -18707,6 +19355,24 @@ index 43a777e..3142a8a 100644
            <AlertDialogAction
              variant="destructive"
              disabled={deleting}
+@@ -2419,7 +2419,7 @@ function SourceTaskPicker({
+         />
+       </ComboboxChips>
+       <ComboboxContent portalContainer={portalContainer}>
+-        <ComboboxEmpty>No matching tasks</ComboboxEmpty>
++        <ComboboxEmpty>Keine passenden Aufgaben</ComboboxEmpty>
+         <ComboboxList>
+           {(taskID) => {
+             const task = tasksByID.get(taskID);
+@@ -2428,7 +2428,7 @@ function SourceTaskPicker({
+                 <div className="flex min-w-0 flex-1 items-center gap-2">
+                   <div className="min-w-0 flex-1">
+                     <p className="truncate text-sm font-medium">
+-                      #{taskID} · {task?.description ?? "Unknown task"}
++                      #{taskID} · {task?.description ?? "Unbekannte Aufgabe"}
+                     </p>
+                     {task?.goal && <p className="text-muted-foreground truncate text-xs">{task.goal}</p>}
+                   </div>
 @@ -2445,7 +2445,7 @@ function SourceTaskPicker({
  
  // CategoryPicker is the single-select category picker in the new-task form: it searches
@@ -18725,6 +19391,52 @@ index 43a777e..3142a8a 100644
      } finally {
        setCreating(false);
      }
+@@ -2560,10 +2560,10 @@ function CategoryPicker({
+               className="flex w-full items-center gap-2 px-2 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
+             >
+               {creating ? <Spinner className="size-4" /> : <PlusIcon className="size-4" />}
+-              Create category "{trimmed}"
++              Kategorie „{trimmed}“ erstellen
+             </button>
+           ) : (
+-            <div className="px-2 py-2 text-sm text-muted-foreground">Type a name to search or create a category</div>
++            <div className="px-2 py-2 text-sm text-muted-foreground">Geben Sie einen Namen ein, um eine Kategorie zu suchen oder zu erstellen</div>
+           ))}
+       </ComboboxContent>
+     </Combobox>
+@@ -2585,7 +2585,7 @@ function companyScopeSummary(company: Company): string {
+     const value = row.raw || row.value || row.domain || row.net || "";
+     return `${COMPANY_SCOPE_LABELS[row.kind] ?? row.kind}: ${value}`;
+   });
+-  return `${preview.join(" · ")}${rows.length > preview.length ? ` · ${rows.length - preview.length} more` : ""}`;
++  return `${preview.join(" · ")}${rows.length > preview.length ? ` · ${rows.length - preview.length} weitere` : ""}`;
+ }
+ 
+ function CompanyPicker({
+@@ -2623,10 +2623,10 @@ function CompanyPicker({
+             <ComboboxChip key={companyID}>{companiesByID.get(companyID)?.name ?? `Company #${companyID}`}</ComboboxChip>
+           ))}
+         </ComboboxValue>
+-        <ComboboxChipsInput id="task-companies" placeholder="Search company name or asset scope" />
++        <ComboboxChipsInput id="task-companies" placeholder="Unternehmensname oder Asset-Umfang suchen" />
+       </ComboboxChips>
+       <ComboboxContent portalContainer={portalContainer}>
+-        <ComboboxEmpty>No matching companies</ComboboxEmpty>
++        <ComboboxEmpty>Keine passenden Unternehmen</ComboboxEmpty>
+         <ComboboxList>
+           {(companyID) => {
+             const company = companiesByID.get(companyID);
+@@ -2710,8 +2710,8 @@ function DraggableCategoryTask({ task, disabled, moving }: { task: Task; disable
+             disabled={disabled}
+             {...listeners}
+             {...attributes}
+-            aria-label={`Drag task #${task.id}`}
+-            title="Drag task"
++            aria-label={`Aufgabe #${task.id} verschieben`}
++            title="Aufgabe verschieben"
+           >
+             <GripVerticalIcon />
+           </Button>
 @@ -2836,11 +2836,11 @@ function CategoryManagementSheet({
        } else {
          const updated = await api.renameTaskCategory(selectedView, name);
@@ -19136,9 +19848,18 @@ index 43a777e..3142a8a 100644
          </SheetFooter>
        </SheetContent>
 diff --git a/web/src/app/(main)/function/traffic/page.tsx b/web/src/app/(main)/function/traffic/page.tsx
-index 0fbcd70..f579722 100644
+index 0fbcd70..a2eb602 100644
 --- a/web/src/app/(main)/function/traffic/page.tsx
 +++ b/web/src/app/(main)/function/traffic/page.tsx
+@@ -47,7 +47,7 @@ import type { TrafficDetail, TrafficExchange, TrafficHost, TrafficResp } from "@
+ import { cn } from "@/lib/utils";
+ 
+ function fmtTime(ts: string) {
+-  return new Date(ts).toLocaleString("zh-CN", {
++  return new Date(ts).toLocaleString("de-DE", {
+     month: "2-digit",
+     day: "2-digit",
+     hour: "2-digit",
 @@ -249,14 +249,14 @@ export default function TrafficPage() {
      [hosts, hostCountSortDirection],
    );
@@ -19249,7 +19970,14 @@ index 0fbcd70..f579722 100644
                ) : (
                  sortedHosts.map((h, index) => (
                    <label
-@@ -453,36 +453,36 @@ export default function TrafficPage() {
+@@ -447,42 +447,42 @@ export default function TrafficPage() {
+                   setPickerOpen(false);
+                 }}
+               >
+-                Delete selected ({selectedHosts.length})
++                Auswahl löschen ({selectedHosts.length})
+               </Button>
+             </div>
            </PopoverContent>
          </Popover>
          <div className="relative w-48">
@@ -19503,9 +20231,18 @@ index 0fbcd70..f579722 100644
                onClick={(e) => {
                  e.preventDefault();
 diff --git a/web/src/app/(main)/function/workspace/page.tsx b/web/src/app/(main)/function/workspace/page.tsx
-index ff6621d..54fcbf3 100644
+index ff6621d..4367a42 100644
 --- a/web/src/app/(main)/function/workspace/page.tsx
 +++ b/web/src/app/(main)/function/workspace/page.tsx
+@@ -51,7 +51,7 @@ function fmtSize(n: number): string {
+   return `${(n / 1024 / 1024 / 1024).toFixed(1)} GB`;
+ }
+ function fmtTime(ms: number): string {
+-  return new Date(ms).toLocaleString("zh-CN", {
++  return new Date(ms).toLocaleString("de-DE", {
+     year: "2-digit",
+     month: "2-digit",
+     day: "2-digit",
 @@ -85,7 +85,7 @@ export default function WorkspacePage() {
            setEntries(r.entries);
            setPath(r.path);
@@ -20086,7 +20823,7 @@ index 0d761e8..a09fcf4 100644
            </SheetFooter>
          </SheetContent>
 diff --git a/web/src/app/(main)/system/intercept/page.tsx b/web/src/app/(main)/system/intercept/page.tsx
-index 02b3dd4..d1447ac 100644
+index 02b3dd4..680b909 100644
 --- a/web/src/app/(main)/system/intercept/page.tsx
 +++ b/web/src/app/(main)/system/intercept/page.tsx
 @@ -109,20 +109,20 @@ function sdkTool(key: string, description: string): Tool {
@@ -20190,7 +20927,8 @@ index 02b3dd4..d1447ac 100644
 -            <p className="text-sm font-semibold leading-tight">Model fallback approval</p>
 +            <p className="text-sm font-semibold leading-tight">Modell-Fallback-Freigabe</p>
              <p className="text-xs text-muted-foreground mt-0.5">
-               Only commands that are inside the <span className="font-medium text-foreground">intercept scope</span> and <span className="font-medium text-foreground">match no intercept rule</span> are semantically judged by the model (allow / send to human / deny)
+-              Only commands that are inside the <span className="font-medium text-foreground">intercept scope</span> and <span className="font-medium text-foreground">match no intercept rule</span> are semantically judged by the model (allow / send to human / deny)
++              Das Modell bewertet nur Befehle, die <span className="font-medium text-foreground">im Prüfbereich liegen</span> und <span className="font-medium text-foreground">auf keine Freigaberegel passen</span>. Es kann sie zulassen, zur manuellen Prüfung vorlegen oder ablehnen.
              </p>
            </div>
          </div>
@@ -20696,7 +21434,7 @@ index 02b3dd4..d1447ac 100644
            </div>
          </DialogContent>
 diff --git a/web/src/app/(main)/system/llm/_components/retry.tsx b/web/src/app/(main)/system/llm/_components/retry.tsx
-index 30ab831..f36d2ed 100644
+index 30ab831..10744f8 100644
 --- a/web/src/app/(main)/system/llm/_components/retry.tsx
 +++ b/web/src/app/(main)/system/llm/_components/retry.tsx
 @@ -52,65 +52,65 @@ type LayerMeta = {
@@ -20850,7 +21588,20 @@ index 30ab831..f36d2ed 100644
      </div>
    );
  }
-@@ -273,7 +273,7 @@ export function RetryPolicyPanel() {
+@@ -240,10 +240,9 @@ export function ProfileRetryFields({
+   return (
+     <div className="grid gap-3 rounded-lg border p-3">
+       <div className="grid gap-0.5">
+-        <Label className="text-sm">Retry override</Label>
++        <Label className="text-sm">Wiederholungen für dieses Profil</Label>
+         <p className="text-muted-foreground text-xs">
+-          Applies only to this profile, overriding the global defaults under "Retry and backoff". Empty in any field = follow global; attempts -1 = disable this retry layer;
+-          a set interval replaces exponential backoff with a fixed interval. The breaker and intent rerun are process-wide and can only be adjusted on the global page.
++          Diese Einstellungen gelten nur für dieses Profil. Leere Felder übernehmen die globalen Werte unter „Wiederholungen und Wartezeiten“. Mit −1 Versuchen wird die jeweilige Wiederholungsstufe deaktiviert. Ein festes Intervall ersetzt die exponentielle Wartezeit. Die Unterbrechung bei Fehlern und das Wiederholen von Absichten lassen sich nur global einstellen.
+         </p>
+       </div>
+       {(["connect", "empty", "stream"] as const).map((k) => (
+@@ -273,7 +272,7 @@ export function RetryPolicyPanel() {
        const p = await api.llmRetryPolicy();
        setPolicy({ ...ZERO_POLICY, ...p });
      } catch (e) {
@@ -20859,7 +21610,7 @@ index 30ab831..f36d2ed 100644
      } finally {
        setLoading(false);
      }
-@@ -290,9 +290,9 @@ export function RetryPolicyPanel() {
+@@ -290,9 +289,9 @@ export function RetryPolicyPanel() {
        // The backend clamps out-of-range values and returns them; refresh directly with the returned values, so what you see is what is stored.
        const saved = await api.saveLLMRetryPolicy(policy);
        setPolicy({ ...ZERO_POLICY, ...saved });
@@ -20871,7 +21622,7 @@ index 30ab831..f36d2ed 100644
      } finally {
        setSaving(false);
      }
-@@ -303,7 +303,7 @@ export function RetryPolicyPanel() {
+@@ -303,7 +302,7 @@ export function RetryPolicyPanel() {
    if (loading) {
      return (
        <div className="flex items-center gap-2 rounded-lg border border-dashed p-10 text-muted-foreground text-sm">
@@ -20880,7 +21631,7 @@ index 30ab831..f36d2ed 100644
        </div>
      );
    }
-@@ -311,12 +311,12 @@ export function RetryPolicyPanel() {
+@@ -311,12 +310,12 @@ export function RetryPolicyPanel() {
    return (
      <div className="grid gap-4">
        <div className="rounded-lg border bg-muted/30 p-3 text-muted-foreground text-xs leading-relaxed">
@@ -20899,7 +21650,7 @@ index 30ab831..f36d2ed 100644
        </div>
  
        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-@@ -328,10 +328,10 @@ export function RetryPolicyPanel() {
+@@ -328,10 +327,10 @@ export function RetryPolicyPanel() {
        <div className="flex gap-2">
          <Button onClick={save} disabled={saving}>
            {saving ? <Loader2Icon className="animate-spin" /> : <SaveIcon />}
@@ -20913,7 +21664,7 @@ index 30ab831..f36d2ed 100644
        </div>
      </div>
 diff --git a/web/src/app/(main)/system/llm/page.tsx b/web/src/app/(main)/system/llm/page.tsx
-index 327974f..dd47f98 100644
+index 327974f..62c13e1 100644
 --- a/web/src/app/(main)/system/llm/page.tsx
 +++ b/web/src/app/(main)/system/llm/page.tsx
 @@ -40,28 +40,28 @@ const NONE = "none";
@@ -20957,7 +21708,7 @@ index 327974f..dd47f98 100644
    { value: "max", label: "max" },
  ];
  
-@@ -77,14 +77,14 @@ type Health = { label: string; cls: string; hint?: string };
+@@ -77,30 +77,30 @@ type Health = { label: string; cls: string; hint?: string };
  function healthOf(p: LLMProfile, m?: LLMPoolMember): Health {
    if (!p.api_key_hint) {
      return {
@@ -20971,11 +21722,16 @@ index 327974f..dd47f98 100644
    if (m?.state === "tripped") {
      return {
 -      label: m.cooldown_secs > 0 ? `Tripped · ${cooldownText(m.cooldown_secs)}` : "Tripped",
-+      label: m.cooldown_secs > 0 ? `Tripped · ${cooldownText(m.cooldown_secs)}` : "Ausgelöst",
++      label: m.cooldown_secs > 0 ? `Ausgelöst · ${cooldownText(m.cooldown_secs)}` : "Ausgelöst",
        cls: "border-destructive/50 text-destructive",
        hint: m.last_error,
      };
-@@ -96,11 +96,11 @@ function healthOf(p: LLMProfile, m?: LLMPoolMember): Health {
+   }
+   if (m?.state === "degraded") {
+     return {
+-      label: `Degraded · ${m.fails} failures`,
++      label: `Beeinträchtigt · Fehler: ${m.fails}`,
+       cls: "border-amber-500/50 text-amber-600 dark:text-amber-400",
        hint: m.last_error,
      };
    }
@@ -21017,7 +21773,7 @@ index 327974f..dd47f98 100644
      }
    }
  
-@@ -162,7 +162,7 @@ function PoolSheet({
+@@ -162,10 +162,10 @@ function PoolSheet({
        <SheetContent side="right" className="flex flex-col gap-0 p-0 data-[side=right]:sm:max-w-lg">
          <SheetHeader className="px-4">
            <SheetTitle className="flex items-center gap-2">
@@ -21025,7 +21781,11 @@ index 327974f..dd47f98 100644
 +            <ZapIcon className="size-4" /> LLM-Polling · Failover
            </SheetTitle>
            <SheetDescription>
-             When enabled, Agents with <b>no model specified</b> automatically switch to the next
+-            When enabled, Agents with <b>no model specified</b> automatically switch to the next
++            When enabled, Agents with <b>Kein Modell angegeben</b> automatically switch to the next
+             profile when the current one is unavailable (insufficient balance / invalid Key / rate
+             limited / service error).
+           </SheetDescription>
 @@ -174,14 +174,14 @@ function PoolSheet({
          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-6">
            <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
@@ -21250,7 +22010,7 @@ index 327974f..dd47f98 100644
              <Input
                id="p-base-url"
                className="font-mono"
-@@ -582,11 +582,11 @@ function ProfileSheet({
+@@ -582,22 +582,22 @@ function ProfileSheet({
            </div>
  
            <div className="grid gap-2">
@@ -21264,7 +22024,11 @@ index 327974f..dd47f98 100644
                value={sessionHeaderKey}
                onChange={(e) => setSessionHeaderKey(e.target.value)}
              />
-@@ -597,7 +597,7 @@ function ProfileSheet({
+             <p className="text-muted-foreground text-xs">
+-              Once a header name is set, every request carries this HTTP header, with its value automatically set to the <b>current session's session id</b> (chat sessions like
++              Once a header name is set, every request carries this HTTP header, with its value automatically set to the <b>ID der aktuellen Sitzung</b> (chat sessions like
+               conv-12, workers like exp3-worker-i87). Use it for gateways that do prompt caching / sticky routing based on a session-id header; it stays stable across turns of the same session and differs between sessions. Leave empty to not send it.
+             </p>
            </div>
  
            <div className="grid gap-2">
@@ -22013,7 +22777,7 @@ index a398af2..46662d7 100644
    return <p className="text-muted-foreground text-sm">{parts.join(" · ")}</p>;
  }
 diff --git a/web/src/app/(main)/system/notify/_components/delivery-list.tsx b/web/src/app/(main)/system/notify/_components/delivery-list.tsx
-index 167c80e..d19bd63 100644
+index 167c80e..a317784 100644
 --- a/web/src/app/(main)/system/notify/_components/delivery-list.tsx
 +++ b/web/src/app/(main)/system/notify/_components/delivery-list.tsx
 @@ -32,7 +32,7 @@ export function DeliveryList({ channels }: { channels: NotificationChannel[] })
@@ -22134,6 +22898,13 @@ index 167c80e..d19bd63 100644
            </Button>
          </div>
        )}
+@@ -180,5 +180,5 @@ export function DeliveryList({ channels }: { channels: NotificationChannel[] })
+ function formatTime(iso: string): string {
+   const d = new Date(iso);
+   if (Number.isNaN(d.getTime())) return iso;
+-  return d.toLocaleString("zh-CN", { hour12: false });
++  return d.toLocaleString("de-DE", { hour12: false });
+ }
 diff --git a/web/src/app/(main)/system/notify/page.tsx b/web/src/app/(main)/system/notify/page.tsx
 index 3b1de6d..c931b66 100644
 --- a/web/src/app/(main)/system/notify/page.tsx
@@ -22780,7 +23551,7 @@ index 03818c3..be5bdde 100644
          </p>
        </CardContent>
 diff --git a/web/src/app/(main)/system/settings/page.tsx b/web/src/app/(main)/system/settings/page.tsx
-index b1949a1..d5c0f19 100644
+index b1949a1..b03ee6f 100644
 --- a/web/src/app/(main)/system/settings/page.tsx
 +++ b/web/src/app/(main)/system/settings/page.tsx
 @@ -65,7 +65,7 @@ export default function SystemSettingsPage() {
@@ -22816,7 +23587,7 @@ index b1949a1..d5c0f19 100644
        .finally(() => setSaving(false));
    };
    const detectPython = () => {
-@@ -132,7 +132,7 @@ export default function SystemSettingsPage() {
+@@ -132,11 +132,11 @@ export default function SystemSettingsPage() {
        .setSettings({ agent_traffic_binding: v })
        .then((s) => {
          apply(s);
@@ -22825,7 +23596,12 @@ index b1949a1..d5c0f19 100644
        })
        .catch((e) => {
          setAgentTrafficBinding(!v);
-@@ -155,7 +155,7 @@ export default function SystemSettingsPage() {
+-        toast.error(`Failed to save: ${(e as Error).message}`);
++        toast.error(`Speichern fehlgeschlagen: ${(e as Error).message}`);
+       })
+       .finally(() => setSaving(false));
+   };
+@@ -155,11 +155,11 @@ export default function SystemSettingsPage() {
        .setSettings({ noa_compaction: v })
        .then((s) => {
          apply(s);
@@ -22834,6 +23610,11 @@ index b1949a1..d5c0f19 100644
        })
        .catch((e) => {
          setNoaCompaction(!v); // revert on failure
+-        toast.error(`Failed to save: ${(e as Error).message}`);
++        toast.error(`Speichern fehlgeschlagen: ${(e as Error).message}`);
+       });
+   };
+ 
 @@ -170,10 +170,10 @@ export default function SystemSettingsPage() {
        .setSettings(patch)
        .then((s) => {
@@ -23063,8 +23844,12 @@ index b1949a1..d5c0f19 100644
                  <Select
                    value={backend}
                    disabled={!loaded || saving}
-@@ -485,10 +485,10 @@ export default function SystemSettingsPage() {
-                     <SelectValue placeholder="Select a source" />
+@@ -482,13 +482,13 @@ export default function SystemSettingsPage() {
+                   }}
+                 >
+                   <SelectTrigger className="w-48 shrink-0">
+-                    <SelectValue placeholder="Select a source" />
++                    <SelectValue placeholder="Quelle auswählen" />
                    </SelectTrigger>
                    <SelectContent>
 -                    <SelectItem value="ddgs">DuckDuckGo (ddgs · free, no key)</SelectItem>
@@ -23265,7 +24050,7 @@ index b1949a1..d5c0f19 100644
                </Button>
              </div>
            </CardContent>
-@@ -687,7 +687,7 @@ export default function SystemSettingsPage() {
+@@ -687,17 +687,17 @@ export default function SystemSettingsPage() {
            <CardHeader>
              <CardTitle className="flex items-center gap-2 text-base">
                <KeyboardIcon className="size-4" />
@@ -23273,8 +24058,12 @@ index b1949a1..d5c0f19 100644
 +              Chat-Eingabe-Sendetaste
              </CardTitle>
              <CardDescription>
-               Shared by the chat page and the main agent session input on the task detail page; takes effect immediately with no save needed.
-@@ -697,7 +697,7 @@ export default function SystemSettingsPage() {
+-              Shared by the chat page and the main agent session input on the task detail page; takes effect immediately with no save needed.
++              Gilt für die Chatseite und das Eingabefeld der Hauptsitzung in den Aufgabendetails. Änderungen gelten sofort.
+               <br />
+-              This preference is <b>stored only in this browser</b> and is not synced with your account; you will need to set it again after switching browsers or clearing site data.
++              Diese Einstellung wird <b>nur in diesem Browser gespeichert</b>. Nach einem Browserwechsel oder dem Löschen der Websitedaten müssen Sie sie erneut festlegen.
+             </CardDescription>
            </CardHeader>
            <CardContent className="flex items-center justify-between gap-4">
              <Label htmlFor="chat-send-mode" className="text-sm font-normal text-muted-foreground">
@@ -23284,18 +24073,20 @@ index b1949a1..d5c0f19 100644
              <Select value={sendMode} onValueChange={(v) => setChatSendMode(v as ChatSendMode)}>
                <SelectTrigger id="chat-send-mode" className="w-72">
 diff --git a/web/src/app/(main)/system/skills/page.tsx b/web/src/app/(main)/system/skills/page.tsx
-index 8cd4114..be5447b 100644
+index 8cd4114..83cce35 100644
 --- a/web/src/app/(main)/system/skills/page.tsx
 +++ b/web/src/app/(main)/system/skills/page.tsx
-@@ -46,7 +46,7 @@ import { api } from "@/lib/api";
+@@ -46,8 +46,8 @@ import { api } from "@/lib/api";
  import type { Agent, SkillItem, MCPServer, SkillCall, MissingSkill } from "@/lib/types";
  
  function fmtTime(ts?: string) {
 -  if (!ts) return "Never called";
+-  return new Date(ts).toLocaleString("zh-CN", {
 +  if (!ts) return "Nie aufgerufen";
-   return new Date(ts).toLocaleString("zh-CN", {
++  return new Date(ts).toLocaleString("de-DE", {
      month: "2-digit",
      day: "2-digit",
+     hour: "2-digit",
 @@ -177,23 +177,23 @@ function SkillsOverview({
    if (skills.length === 0) {
      return (
@@ -23388,6 +24179,15 @@ index 8cd4114..be5447b 100644
        }
      } finally {
        setUploading(false);
+@@ -415,7 +415,7 @@ export default function SkillsPage() {
+     setFileLoading(true);
+     api.readSkillFile(selected.skill, selected.path)
+       .then((c) => { setFileContent(c); setDirty(false); })
+-      .catch(() => toast.error("Failed to read file"))
++      .catch(() => toast.error("Datei konnte nicht gelesen werden"))
+       .finally(() => setFileLoading(false));
+   }, [selected]);
+ 
 @@ -469,17 +469,17 @@ export default function SkillsPage() {
      try {
        if (c.kind === "dir") {
@@ -23540,7 +24340,7 @@ index 8cd4114..be5447b 100644
          <div className="flex flex-col gap-0.5">
            <h1 className="text-sm font-semibold leading-tight">Skill</h1>
 -          <p className="text-muted-foreground text-xs">Skill library · agentskills.io spec · visibility granted per Agent</p>
-+          <p className="text-muted-foreground text-xs">Skill-Bibliothek · agentskills.io-Spezifikation · Sichtbarkeit pro Agent gewährt</p>
++          <p className="text-muted-foreground text-xs">Skill-Bibliothek · Spezifikation agentskills.io · Sichtbarkeit je Agent einstellbar</p>
          </div>
          {/* Gap list: skills that agents named but the library does not have — a direct indication of what to add. */}
          {missing.length > 0 && (
@@ -24325,6 +25125,19 @@ index 93dd0db..a5305c8 100644
              </Button>
            )}
          </div>
+diff --git a/web/src/app/layout.tsx b/web/src/app/layout.tsx
+index cac588d..e6daa58 100644
+--- a/web/src/app/layout.tsx
++++ b/web/src/app/layout.tsx
+@@ -22,7 +22,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode
+     PREFERENCE_DEFAULTS;
+   return (
+     <html
+-      lang="en"
++      lang="de"
+       data-theme-mode={theme_mode}
+       data-theme-preset={theme_preset}
+       data-content-layout={content_layout}
 diff --git a/web/src/app/not-found.tsx b/web/src/app/not-found.tsx
 index 29d4af7..6956651 100644
 --- a/web/src/app/not-found.tsx
@@ -24344,7 +25157,7 @@ index 29d4af7..6956651 100644
      </div>
    );
 diff --git a/web/src/components/agent-editor.tsx b/web/src/components/agent-editor.tsx
-index 4a150bf..5b0cc22 100644
+index 4a150bf..6a3a55a 100644
 --- a/web/src/components/agent-editor.tsx
 +++ b/web/src/components/agent-editor.tsx
 @@ -115,66 +115,66 @@ export function AgentEditor({ agentKey, onSaved }: { agentKey: string; onSaved?:
@@ -24505,7 +25318,7 @@ index 4a150bf..5b0cc22 100644
        </TabsList>
  
        {/* Config + prompt */}
-@@ -285,14 +285,14 @@ export function AgentEditor({ agentKey, onSaved }: { agentKey: string; onSaved?:
+@@ -285,23 +285,23 @@ export function AgentEditor({ agentKey, onSaved }: { agentKey: string; onSaved?:
              <div className="grid gap-3 rounded-md border p-3">
                {showLLM && (
                  <div className="grid gap-1.5">
@@ -24521,8 +25334,10 @@ index 4a150bf..5b0cc22 100644
 +                        <SelectItem value="__follow__">Aufgabe / global aktive Konfiguration folgen</SelectItem>
                          {llmProfiles.map((p) => (
                            <SelectItem key={p.id} value={String(p.id)}>
-                             {p.name} ({p.model}){p.is_default ? " · default" : ""}
-@@ -301,7 +301,7 @@ export function AgentEditor({ agentKey, onSaved }: { agentKey: string; onSaved?:
+-                            {p.name} ({p.model}){p.is_default ? " · default" : ""}
++                            {p.name} ({p.model}){p.is_default ? " · Standard" : ""}
+                           </SelectItem>
+                         ))}
                        </SelectContent>
                      </Select>
                      <span className="text-muted-foreground max-w-md text-xs">
@@ -24588,7 +25403,7 @@ index 4a150bf..5b0cc22 100644
              <div className="flex flex-wrap gap-2">
                {variables.map((v) => (
                  <Tooltip key={v.name}>
-@@ -379,23 +379,23 @@ export function AgentEditor({ agentKey, onSaved }: { agentKey: string; onSaved?:
+@@ -379,24 +379,24 @@ export function AgentEditor({ agentKey, onSaved }: { agentKey: string; onSaved?:
                    </TooltipContent>
                  </Tooltip>
                ))}
@@ -24612,11 +25427,13 @@ index 4a150bf..5b0cc22 100644
                <DialogContent className="sm:max-w-2xl">
                  <DialogHeader>
 -                  <DialogTitle>Rendered preview</DialogTitle>
+-                  <DialogDescription>All {`{{.Var}}`} placeholders were replaced by the backend with sample values.</DialogDescription>
 +                  <DialogTitle>Gerenderte Vorschau</DialogTitle>
-                   <DialogDescription>All {`{{.Var}}`} placeholders were replaced by the backend with sample values.</DialogDescription>
++                  <DialogDescription>Alle {`{{.Var}}`} placeholders were replaced by the backend with sample values.</DialogDescription>
                  </DialogHeader>
                  <div className="max-h-[60vh] overflow-auto rounded-md border bg-muted/30 p-3">
-@@ -404,22 +404,22 @@ export function AgentEditor({ agentKey, onSaved }: { agentKey: string; onSaved?:
+                   <Markdown text={preview} />
+@@ -404,26 +404,26 @@ export function AgentEditor({ agentKey, onSaved }: { agentKey: string; onSaved?:
                </DialogContent>
              </Dialog>
              <Button size="sm" onClick={savePrompt}>
@@ -24643,6 +25460,11 @@ index 4a150bf..5b0cc22 100644
                    <span className="text-muted-foreground truncate flex-1">{ver.note}</span>
                    {ver.ts && (
                      <span className="text-muted-foreground/60 shrink-0 tabular-nums">
+-                      {new Date(ver.ts).toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
++                      {new Date(ver.ts).toLocaleDateString("de-DE", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                     </span>
+                   )}
+                   <Button variant="ghost" size="icon-sm" className="size-6 shrink-0" onClick={() => setViewVer(ver)}>
 @@ -437,7 +437,7 @@ export function AgentEditor({ agentKey, onSaved }: { agentKey: string; onSaved?:
                  </li>
                ))}
@@ -24652,7 +25474,7 @@ index 4a150bf..5b0cc22 100644
                )}
              </ul>
            </div>
-@@ -449,11 +449,11 @@ export function AgentEditor({ agentKey, onSaved }: { agentKey: string; onSaved?:
+@@ -449,14 +449,14 @@ export function AgentEditor({ agentKey, onSaved }: { agentKey: string; onSaved?:
                  <DialogTitle>
                    v{viewVer?.version}
                    {viewVer?.version === versions[0]?.version && (
@@ -24665,7 +25487,11 @@ index 4a150bf..5b0cc22 100644
 +                  {viewVer?.note || "(keine Notiz)"}
                    {viewVer?.ts && (
                      <span className="ml-2 text-muted-foreground/60">
-                       {new Date(viewVer.ts).toLocaleString("zh-CN")}
+-                      {new Date(viewVer.ts).toLocaleString("zh-CN")}
++                      {new Date(viewVer.ts).toLocaleString("de-DE")}
+                     </span>
+                   )}
+                 </DialogDescription>
 @@ -469,13 +469,13 @@ export function AgentEditor({ agentKey, onSaved }: { agentKey: string; onSaved?:
                    <Button variant="outline" size="sm" onClick={() => {
                      if (viewVer) { setDiffVer(viewVer); setViewVer(null); }
@@ -25157,10 +25983,53 @@ index 4a150bf..5b0cc22 100644
                <Trash2Icon className="size-3.5" />
              </Button>
            </div>
+diff --git a/web/src/components/approval-execution-focus.tsx b/web/src/components/approval-execution-focus.tsx
+index 9947275..b0fcfb1 100644
+--- a/web/src/components/approval-execution-focus.tsx
++++ b/web/src/components/approval-execution-focus.tsx
+@@ -78,13 +78,13 @@ export function useApprovalHistory(
+         const page = await loadPage(before);
+         if (cancelled) return;
+         if (!page.items.length || (before > 0 && page.items[0].seq >= before)) {
+-          throw new Error("The corresponding tool call was not found in the conversation; the record may have been deleted");
++          throw new Error("Der zugehörige Toolaufruf fehlt in der Konversation. Möglicherweise wurde der Eintrag gelöscht.");
+         }
+         mergePage(page);
+         current = page.items;
+         before = current[0].seq;
+         if (!page.hasMore && !current.some((a) => a.seq === source.seq)) {
+-          throw new Error("The corresponding tool call was not found in the conversation");
++          throw new Error("Der zugehörige Toolaufruf wurde in der Konversation nicht gefunden.");
+         }
+       }
+       if (!cancelled) setResult({ source });
+@@ -126,11 +126,11 @@ export function ApprovalExecutionFocus({
+       <div className="flex gap-2">
+         {error ? (
+           <Button size="sm" variant="outline" onClick={focus.retry}>
+-            Retry
++            Erneut versuchen
+           </Button>
+         ) : null}
+         <Button size="sm" variant="ghost" onClick={focus.close}>
+-          Cancel
++          Abbrechen
+         </Button>
+       </div>
+     </div>
 diff --git a/web/src/components/approval-records.tsx b/web/src/components/approval-records.tsx
-index 7aecd79..4bbf5dc 100644
+index 7aecd79..2eb49e4 100644
 --- a/web/src/components/approval-records.tsx
 +++ b/web/src/components/approval-records.tsx
+@@ -38,7 +38,7 @@ import { cn } from "@/lib/utils";
+ 
+ function fmtTime(value?: string) {
+   if (!value) return "—";
+-  return new Date(value).toLocaleString("zh-CN", {
++  return new Date(value).toLocaleString("de-DE", {
+     month: "2-digit",
+     day: "2-digit",
+     hour: "2-digit",
 @@ -75,7 +75,7 @@ function ApprovalOrigin({ row, detail = false }: { row: InterceptApprovalRow; de
      <a
        href={href}
@@ -25353,7 +26222,8 @@ index 7aecd79..4bbf5dc 100644
                </div>
              ))
            ) : (
-             <p className="text-muted-foreground text-xs">No matching historical tool execution was provided for this review.</p>
+-            <p className="text-muted-foreground text-xs">No matching historical tool execution was provided for this review.</p>
++            <p className="text-muted-foreground text-xs">Für diese Prüfung liegt kein passender früherer Toolaufruf vor.</p>
            )}
            {input.history_truncated ? (
 -            <p className="text-muted-foreground text-xs">History uses a limited window; some content was truncated.</p>
@@ -25517,7 +26387,7 @@ index 7aecd79..4bbf5dc 100644
                    </AlertDescription>
                  </Alert>
                )}
-@@ -444,26 +444,26 @@ export function ApprovalDetail({
+@@ -444,38 +444,38 @@ export function ApprovalDetail({
                      <Button variant="ghost" size="sm">
                        <ChevronDownIcon data-icon="inline-start" />
                        {audit.model_input && audit.model_input.version >= 3
@@ -25550,7 +26420,12 @@ index 7aecd79..4bbf5dc 100644
                          ) : null}
                          {audit.context?.length ? (
                            audit.context.map((entry, index) => (
-@@ -475,7 +475,7 @@ export function ApprovalDetail({
+                             <CodeBlock
+                               key={`${entry.kind}-${entry.tool_use_id || index}`}
+-                              label={`${contextLabels[entry.kind] ?? entry.kind}${entry.tool ? ` · ${entry.tool}` : ""}${entry.is_error ? " · error" : ""}`}
++                              label={`${contextLabels[entry.kind] ?? entry.kind}${entry.tool ? ` · ${entry.tool}` : ""}${entry.is_error ? " · Fehler" : ""}`}
+                               text={entry.text}
+                               truncated={entry.truncated}
                              />
                            ))
                          ) : (
@@ -26126,6 +27001,38 @@ index 425a17a..eb935f7 100644
      }
    }
  
+diff --git a/web/src/components/exploration-graph.tsx b/web/src/components/exploration-graph.tsx
+index 6cc866989c24175244e53dd7298c84a8eabe1114..f26f78b022e1ba3bedcdd6d65ee23dbe6fa4b50c 100644
+GIT binary patch
+delta 819
+zcmaJ<OKVd>6z2Ao^o8_oZG~y9kU}4z8!hyawAWT!V{3%gx~P-flgW@|ZkU<d(w3Ai
+zL{V4vfFKB3aN$M}?#4x3NEdb|>dwF5Li!J!n^>_5&g#r}-rxBieX(}FT5k`lm*;_N
+z(1fNUgAIf@Ao&_Ns~PDQMoA<IdQ+2FO7V17lZ-2MIckGL-ciPH%T4fD1uRN;4FWI@
+zd0^UatC_KyW~o=y)XOlM0z9f+$8WVQ%`s0gDwryIBBu@dpk~Ds#O=B#p;<20fh+6?
+z?S_7}#W$h*jd5^O)Xd-shL^*;&B=6j-Tak?d>-&~_}-}%PtigFM20FAMBS<Xc(Rcn
+zZFm}8GQCNxG7mY|za@s1>&Y~%YN~Rp+$oWR{S-*y2BijxN@peT6a!-%>>Dobmc|WB
+zf4)U87{RZ;*wolmwvV^%8SiQNCm*e`c7I{~g4Jwu2EzDhMuWhFeHvd*v{v8RDB`<`
+ziMphw+Ee(!?(*9wA6g9ylDm@YgI7Ah@W-`Q{1jv1S&%tTWRAfW?2UC}DZYDhk`H#b
+z$q1ZnxIER_N232<asc<zz4&74O8trvN99W2r_P5R7@D>t10~}+i?<gW{mJPn>u=)y
+zguQ1C9$$k&a1RY+PPk@I65T35!4Q1aQNwu<OlM02cx1L5n&EXLOMw>U?_e&7!$E;0
+zF;P*VDC>|xo;n~#@%i<Bj3l~nXTIMjiAz@arkizWh0im%edAfjoLl5zR7;F5D>jG-
+t_9Z&;^?Wb7V_m+t@VKfc;ij`B2V4NL14bRAAXTmu!S`&$k0%d1egc72El2<W
+
+delta 714
+zcmY*XOHWfl6wc)_w6qIRN<m_BQy?lTiRq37lu}+%plDpV0JM!I@=%HzB~73~`;r!V
+zR4QO81ZiwyDc;KC_Mr<CSs7n(<HAj6?!`?_^anU{8>6#2^PTz5_nk9m;uGWk$i#N@
+z5s9aT2TSlFzw|Vj^5KQ_9;7uVi&^&efO*hlt!FhEK8zjwK6Y(%<fi!#CazDCfR|$n
+z+88+r?PL-O>|O>Lx&_}0OOW_-OR(?Is{;uOQ4(?hpjkwGGr}qlCyM+?Qi3-{_fUrS
+z;Ajvo$S9ihk$4b($)*tYdW7UNaLC{0ig6c<A02BE5@F(cB|0LKAX`;EK3r!VxiNa#
+z+&k89z1llqvSpL^u`eR7C;Ds+w2glcdGeI-GhDk?sZdIB&Ujx#C6Y+MG#}!Y8ng_;
+z8$mJ=hHs6vNZ3f=pa+z?MkKg5$;2erqYE+eOfrD)It4xqJvue?HkCk?-h!mUIj9ys
+z>;3<0^&2bb+iF;EE>mTbPN}88rn5;G==6vEhIT~eHuvV@&||2P-Laf%?$R8$!Rw|Y
+z;B8fKYlb{VDGf<TfEeYe&vH1>S;T#5u`@?=nfWQvZKpp$WyXihLzm2>9VTntpn3Sp
+zn1#;C1<PmD+(O#`qRp?7MHgths%zNHc7!-*@N7ULlf}s1ybq@UyQb-SV0TDNr6{u!
+zx=rO^Y?HzBR<++y0Pl=y_;I!nf(98pZaoN!b4ti|eWf;+aM(j0#>jMZ-{$*vIsEMQ
+ztMJwfygH4Yn;Mp`R4xRjql}9g(|HwS-cII1#JeKIS0pywL0dgL4%aJ7q0^$`w$JaX
+Fegk>;X$$}W
+
 diff --git a/web/src/components/finding-retest-dialog.tsx b/web/src/components/finding-retest-dialog.tsx
 index 2fc33e2..7987fb1 100644
 --- a/web/src/components/finding-retest-dialog.tsx
@@ -26189,7 +27096,7 @@ index 2fc33e2..7987fb1 100644
          </DialogFooter>
        </DialogContent>
 diff --git a/web/src/components/finding-retest-panel.tsx b/web/src/components/finding-retest-panel.tsx
-index a23162d..d9a1f5b 100644
+index a23162d..4d92cfe 100644
 --- a/web/src/components/finding-retest-panel.tsx
 +++ b/web/src/components/finding-retest-panel.tsx
 @@ -19,13 +19,13 @@ import { api } from "@/lib/api";
@@ -26262,7 +27169,12 @@ index a23162d..d9a1f5b 100644
              </EmptyHeader>
            </Empty>
          ) : null}
-@@ -138,10 +138,10 @@ export function FindingRetestPanel({
+@@ -134,14 +134,14 @@ export function FindingRetestPanel({
+                       : statusLabels[item.status]}
+                   </Badge>
+                   <span className="text-muted-foreground text-xs">
+-                    #{item.id} · {new Date(item.created_at).toLocaleString("zh-CN")}
++                    #{item.id} · {new Date(item.created_at).toLocaleString("de-DE")}
                    </span>
                    {item.conversation_id != null ? (
                      <Button asChild variant="ghost" size="sm" className="ml-auto">
@@ -26291,7 +27203,7 @@ index a23162d..d9a1f5b 100644
                        <Markdown text={item.evidence} />
                      </div>
 diff --git a/web/src/components/finding-traffic-panel.tsx b/web/src/components/finding-traffic-panel.tsx
-index 5962729..cbd518f 100644
+index 5962729..489c5ff 100644
 --- a/web/src/components/finding-traffic-panel.tsx
 +++ b/web/src/components/finding-traffic-panel.tsx
 @@ -29,9 +29,9 @@ import type { FindingTraffic, FindingTrafficBinding, TrafficEvidenceRole } from
@@ -26367,7 +27279,12 @@ index 5962729..cbd518f 100644
                  </div>
                  <Button
                    variant="link"
-@@ -157,7 +157,7 @@ export function FindingTrafficPanel({
+@@ -153,11 +153,11 @@ export function FindingTrafficPanel({
+                 {b.note ? <p className="text-sm whitespace-pre-wrap">{b.note}</p> : null}
+                 <div className="flex flex-wrap items-center justify-between gap-2">
+                   <span className="text-xs text-muted-foreground">
+-                    {new Date(b.snapshot.captured_at * 1000).toLocaleString("zh-CN")}
++                    {new Date(b.snapshot.captured_at * 1000).toLocaleString("de-DE")}
                    </span>
                    <div className="flex flex-wrap gap-1">
                      <Button variant="outline" size="sm" onClick={() => setPreview(b.id)}>
@@ -26588,6 +27505,106 @@ index eb800e7..257b069 100644
            </Button>
          </DialogFooter>
        </DialogContent>
+diff --git a/web/src/components/mention-textarea.tsx b/web/src/components/mention-textarea.tsx
+index fe9e9a9..2e65b1f 100644
+--- a/web/src/components/mention-textarea.tsx
++++ b/web/src/components/mention-textarea.tsx
+@@ -230,7 +230,7 @@ export function MentionTextarea({ value, onValueChange, onKeyDown, className, in
+           onInteractOutside={(event) => {
+             if (event.target === textarea.current) event.preventDefault();
+           }}
+-          aria-label="Select records to reference"
++          aria-label="Datensätze zum Verknüpfen auswählen"
+         >
+           <div className="flex items-center justify-between px-2 py-1 text-muted-foreground text-xs">
+             <span>
+@@ -238,7 +238,7 @@ export function MentionTextarea({ value, onValueChange, onKeyDown, className, in
+                 ? "Select reference type"
+                 : `Search ${mentionKinds.find((kind) => kind.kind === search.kind)?.label ?? "all records"}`}
+             </span>
+-            <span>↑↓ to select · Enter to confirm · Esc to close</span>
++            <span>↑↓ Auswählen · Eingabetaste bestätigen · Esc schließen</span>
+           </div>
+           <div
+             id={listId}
+@@ -272,17 +272,17 @@ export function MentionTextarea({ value, onValueChange, onKeyDown, className, in
+             {!categories.length && loading && (
+               <div role="status" className="flex items-center gap-2 p-3 text-muted-foreground text-sm">
+                 <Loader2Icon className="size-4 animate-spin" />
+-                Searching…
++                Suche läuft …
+               </div>
+             )}
+             {!categories.length && !loading && error && (
+               <div role="alert" className="p-3 text-destructive text-sm">
+-                Search failed: {error}. Type again to retry.
++                Suche fehlgeschlagen: {error}. Geben Sie einen neuen Suchbegriff ein.
+               </div>
+             )}
+             {!categories.length && !loading && !error && !items.length && (
+               <div role="status" className="p-3 text-muted-foreground text-sm">
+-                No matching records; try a different name, address, or ID
++                Keine passenden Datensätze. Versuchen Sie einen anderen Namen, eine andere Adresse oder ID.
+               </div>
+             )}
+             {items.map((item, index) => (
+@@ -310,17 +310,17 @@ export function MentionTextarea({ value, onValueChange, onKeyDown, className, in
+           </div>
+           {!categories.length && (
+             <p className="px-2 py-1 text-muted-foreground text-xs">
+-              {loadingMore && <span role="status">Loading more…</span>}
++              {loadingMore && <span role="status">Weitere Einträge werden geladen …</span>}
+               {!loadingMore && nextCursor && (
+                 <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={loadMore}>
+-                  {pageError ? "Load failed, click to retry" : `Showing ${items.length} items, scroll down to load more`}
++                  {pageError ? "Laden fehlgeschlagen. Klicken, um es erneut zu versuchen." : `Einträge angezeigt: ${items.length}. Nach unten scrollen, um weitere zu laden.`}
+                 </button>
+               )}
+-              {!loadingMore && !nextCursor && !loading && !error && items.length > 0 && `Showing all ${items.length} items`}
++              {!loadingMore && !nextCursor && !loading && !error && items.length > 0 && `Alle Einträge angezeigt (${items.length})`}
+               {!loadingMore &&
+                 !nextCursor &&
+                 (loading || !!error || items.length === 0) &&
+-                "Enter a name, address, or ID to search records"}
++                "Geben Sie einen Namen, eine Adresse oder eine ID ein"}
+             </p>
+           )}
+         </PopoverContent>
+@@ -335,7 +335,7 @@ export function MentionTextarea({ value, onValueChange, onKeyDown, className, in
+               <button
+                 type="button"
+                 disabled={disabled}
+-                aria-label={`Remove reference ${item.label}`}
++                aria-label={`Verweis „${item.label}“ entfernen`}
+                 onClick={() => {
+                   onValueChange(value.slice(0, item.start) + value.slice(item.start + item.token.length));
+                   setCursor(null);
+@@ -345,7 +345,7 @@ export function MentionTextarea({ value, onValueChange, onKeyDown, className, in
+               </button>
+             </Badge>
+           ))}
+-          <span className="text-muted-foreground text-xs">Latest details are read when sent · Up to 10</span>
++          <span className="text-muted-foreground text-xs">Beim Senden werden die aktuellen Details geladen · Bis zu 10 Verweise</span>
+         </div>
+       )}
+     </div>
+diff --git a/web/src/components/scope-text-editor.tsx b/web/src/components/scope-text-editor.tsx
+index a6ff51a..3c54360 100644
+--- a/web/src/components/scope-text-editor.tsx
++++ b/web/src/components/scope-text-editor.tsx
+@@ -67,10 +67,10 @@ export function ScopeTextEditor({
+         <FieldError>
+           {parsed.errors.slice(0, 5).map((item) => (
+             <span key={`${item.line}-${item.error}`} className="block">
+-              Line {item.line}: {item.error}
++              Zeile {item.line}: {item.error}
+             </span>
+           ))}
+-          {parsed.errors.length > 5 && <span className="block">And {parsed.errors.length - 5} more line errors</span>}
++          {parsed.errors.length > 5 && <span className="block">Weitere fehlerhafte Zeilen: {parsed.errors.length - 5}</span>}
+         </FieldError>
+       )}
+     </Field>
 diff --git a/web/src/components/side-question-workspace.tsx b/web/src/components/side-question-workspace.tsx
 index c6890de..69f4cc2 100644
 --- a/web/src/components/side-question-workspace.tsx
@@ -26774,6 +27791,28 @@ index c6890de..69f4cc2 100644
            </DrawerHeader>
            <SidePanel side={side} label={label} composerLayout={composerLayout} />
          </DrawerContent>
+diff --git a/web/src/components/table-pagination.tsx b/web/src/components/table-pagination.tsx
+index 08892f1..559c86d 100644
+--- a/web/src/components/table-pagination.tsx
++++ b/web/src/components/table-pagination.tsx
+@@ -83,7 +83,7 @@ export function TablePagination({
+                 size="icon-sm"
+                 disabled={safePage === 1}
+                 onClick={() => onPageChange(safePage - 1)}
+-                aria-label="Previous page"
++                aria-label="Vorherige Seite"
+               >
+                 <ChevronLeftIcon className="size-4" />
+               </Button>
+@@ -112,7 +112,7 @@ export function TablePagination({
+                 size="icon-sm"
+                 disabled={safePage === totalPages}
+                 onClick={() => onPageChange(safePage + 1)}
+-                aria-label="Next page"
++                aria-label="Nächste Seite"
+               >
+                 <ChevronRightIcon className="size-4" />
+               </Button>
 diff --git a/web/src/components/task-llm-profile-chain.tsx b/web/src/components/task-llm-profile-chain.tsx
 index 624cee8..e60f97e 100644
 --- a/web/src/components/task-llm-profile-chain.tsx
@@ -27172,6 +28211,19 @@ index c1997cf..5fa1272 100644
              </AlertDialogAction>
            </AlertDialogFooter>
          </AlertDialogContent>
+diff --git a/web/src/components/todo-popover.tsx b/web/src/components/todo-popover.tsx
+index 14e5c17..f9cb96b 100644
+--- a/web/src/components/todo-popover.tsx
++++ b/web/src/components/todo-popover.tsx
+@@ -62,7 +62,7 @@ export function TodoPopover({
+       </PopoverTrigger>
+       <PopoverContent align="end" className="max-h-80 w-80 overflow-auto p-2">
+         <p className="text-muted-foreground px-1 pb-1 text-[11px] font-medium">
+-          Recent todos{loading ? " · Loading…" : ""}
++          Letzte To-dos{loading ? " · Wird geladen …" : ""}
+         </p>
+         {err && <p className="text-destructive px-1 text-xs">{err}</p>}
+         {todos && todos.length === 0 && !loading && (
 diff --git a/web/src/components/traffic-evidence-viewer.tsx b/web/src/components/traffic-evidence-viewer.tsx
 index c6e4ac0..6bc94c6 100644
 --- a/web/src/components/traffic-evidence-viewer.tsx
@@ -27247,7 +28299,7 @@ index c6e4ac0..6bc94c6 100644
              <TabsContent value="request">
                <HttpCodeBlock raw={detail.req} />
 diff --git a/web/src/components/traffic-picker-dialog.tsx b/web/src/components/traffic-picker-dialog.tsx
-index 027b7b7..3fe4642 100644
+index 027b7b7..b88ba47 100644
 --- a/web/src/components/traffic-picker-dialog.tsx
 +++ b/web/src/components/traffic-picker-dialog.tsx
 @@ -92,7 +92,7 @@ export function TrafficPickerDialog({
@@ -27347,7 +28399,7 @@ index 027b7b7..3fe4642 100644
                          checked={selected.has(e.id) || alreadyBound.has(e.id)}
                          disabled={busy || loading || alreadyBound.has(e.id)}
                          onCheckedChange={(checked) => toggle(e.id, checked === true)}
-@@ -214,7 +214,7 @@ export function TrafficPickerDialog({
+@@ -214,15 +214,15 @@ export function TrafficPickerDialog({
                        <span className="font-mono text-xs">
                          {e.method} {e.url}
                        </span>
@@ -27355,8 +28407,9 @@ index 027b7b7..3fe4642 100644
 +                      {alreadyBound.has(e.id) ? <Badge variant="secondary">Gebunden</Badge> : null}
                      </TableCell>
                      <TableCell className="whitespace-nowrap text-xs">
-                       {new Date(e.ts).toLocaleString("zh-CN")}
-@@ -222,7 +222,7 @@ export function TrafficPickerDialog({
+-                      {new Date(e.ts).toLocaleString("zh-CN")}
++                      {new Date(e.ts).toLocaleString("de-DE")}
+                     </TableCell>
                      <TableCell>{e.status}</TableCell>
                      <TableCell>
                        <Button variant="ghost" size="sm" onClick={() => setPreview(e.id)}>
@@ -27415,9 +28468,23 @@ index 027b7b7..3fe4642 100644
            </DialogFooter>
          </DialogContent>
 diff --git a/web/src/components/transcript.tsx b/web/src/components/transcript.tsx
-index 99289d4..c797af2 100644
+index 99289d4..d25105c 100644
 --- a/web/src/components/transcript.tsx
 +++ b/web/src/components/transcript.tsx
+@@ -137,11 +137,11 @@ function ActivityTime({ ts }: { ts: string }) {
+   return (
+     <time
+       dateTime={date.toISOString()}
+-      title={date.toLocaleString("zh-CN")}
++      title={date.toLocaleString("de-DE")}
+       className="text-[10px] text-muted-foreground tabular-nums"
+       suppressHydrationWarning
+     >
+-      {date.toLocaleString("zh-CN", {
++      {date.toLocaleString("de-DE", {
+         month: "2-digit",
+         day: "2-digit",
+         hour: "2-digit",
 @@ -234,7 +234,7 @@ function InterceptCard({
          setStatusError("");
          if (p.status !== "pending") setDecided(p.status as "allowed" | "denied" | "timeout");
@@ -27565,6 +28632,19 @@ index 99289d4..c797af2 100644
          </div>
        )}
      </div>
+diff --git a/web/src/components/ui/breadcrumb.tsx b/web/src/components/ui/breadcrumb.tsx
+index db9afc0..b52a577 100644
+--- a/web/src/components/ui/breadcrumb.tsx
++++ b/web/src/components/ui/breadcrumb.tsx
+@@ -106,7 +106,7 @@ function BreadcrumbEllipsis({
+     >
+       <MoreHorizontalIcon
+       />
+-      <span className="sr-only">More</span>
++      <span className="sr-only">Mehr</span>
+     </span>
+   )
+ }
 diff --git a/web/src/components/ui/carousel.tsx b/web/src/components/ui/carousel.tsx
 index dafc149..4fae483 100644
 --- a/web/src/components/ui/carousel.tsx
@@ -27605,6 +28685,41 @@ index dafc149..4fae483 100644
      </Button>
    )
  }
+diff --git a/web/src/components/ui/command.tsx b/web/src/components/ui/command.tsx
+index 4f11297..b6a9cdc 100644
+--- a/web/src/components/ui/command.tsx
++++ b/web/src/components/ui/command.tsx
+@@ -35,7 +35,7 @@ function Command({
+ 
+ function CommandDialog({
+   title = "Command Palette",
+-  description = "Search for a command to run...",
++  description = "Befehl zum Ausführen suchen …",
+   children,
+   className,
+   showCloseButton = false,
+diff --git a/web/src/components/ui/dialog.tsx b/web/src/components/ui/dialog.tsx
+index 4633997..544cbea 100644
+--- a/web/src/components/ui/dialog.tsx
++++ b/web/src/components/ui/dialog.tsx
+@@ -89,7 +89,7 @@ function DialogContent({
+             >
+               <XIcon
+               />
+-              <span className="sr-only">Close</span>
++              <span className="sr-only">Schließen</span>
+             </Button>
+           </DialogPrimitive.Close>
+         )}
+@@ -128,7 +128,7 @@ function DialogFooter({
+       {children}
+       {showCloseButton && (
+         <DialogPrimitive.Close asChild>
+-          <Button variant="outline">Close</Button>
++          <Button variant="outline">Schließen</Button>
+         </DialogPrimitive.Close>
+       )}
+     </div>
 diff --git a/web/src/components/ui/pagination.tsx b/web/src/components/ui/pagination.tsx
 index 96fdae7..4f33dba 100644
 --- a/web/src/components/ui/pagination.tsx
@@ -27648,6 +28763,19 @@ index 96fdae7..4f33dba 100644
      </span>
    )
  }
+diff --git a/web/src/components/ui/sheet.tsx b/web/src/components/ui/sheet.tsx
+index 8d0e1d3..c376f36 100644
+--- a/web/src/components/ui/sheet.tsx
++++ b/web/src/components/ui/sheet.tsx
+@@ -77,7 +77,7 @@ function SheetContent({
+             >
+               <XIcon
+               />
+-              <span className="sr-only">Close</span>
++              <span className="sr-only">Schließen</span>
+             </Button>
+           </SheetPrimitive.Close>
+         )}
 diff --git a/web/src/components/ui/sidebar.tsx b/web/src/components/ui/sidebar.tsx
 index ea78b50..9127040 100644
 --- a/web/src/components/ui/sidebar.tsx
@@ -27685,6 +28813,19 @@ index ea78b50..9127040 100644
        className={cn(
          "absolute inset-y-0 z-20 hidden w-4 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:start-1/2 after:w-[2px] hover:after:bg-sidebar-border sm:flex ltr:-translate-x-1/2 rtl:-translate-x-1/2",
          "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
+diff --git a/web/src/components/ui/spinner.tsx b/web/src/components/ui/spinner.tsx
+index 8dca22b..58371eb 100644
+--- a/web/src/components/ui/spinner.tsx
++++ b/web/src/components/ui/spinner.tsx
+@@ -3,7 +3,7 @@ import { Loader2Icon } from "lucide-react"
+ 
+ function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
+   return (
+-    <Loader2Icon data-slot="spinner" role="status" aria-label="Loading" className={cn("size-4 animate-spin", className)} {...props} />
++    <Loader2Icon data-slot="spinner" role="status" aria-label="Wird geladen" className={cn("size-4 animate-spin", className)} {...props} />
+   )
+ }
+ 
 diff --git a/web/src/config/app-config.ts b/web/src/config/app-config.ts
 index 736d692..9bf5b68 100644
 --- a/web/src/config/app-config.ts
@@ -27713,7 +28854,7 @@ index f630961..fafb078 100644
      });
      stream.addEventListener("cleared", () => {
 diff --git a/web/src/lib/api.ts b/web/src/lib/api.ts
-index 071c7f6..f4278c1 100644
+index 071c7f6..d659bea 100644
 --- a/web/src/lib/api.ts
 +++ b/web/src/lib/api.ts
 @@ -128,7 +128,7 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
@@ -27827,6 +28968,15 @@ index 071c7f6..f4278c1 100644
      return r.json() as Promise<{ attachments: ChatAttachment[] }>;
    },
    stopChat: (taskId: string) => post<{ status: string }>(`/tasks/${taskId}/chat/stop`, {}),
+@@ -1161,7 +1161,7 @@ export const api = {
+       headers: token ? { Authorization: `Bearer ${token}` } : {},
+     });
+     const body = await r.json().catch(() => ({}));
+-    if (!r.ok) throw new Error(body?.error || `Upload failed (${r.status})`);
++    if (!r.ok) throw new Error(body?.error || `Hochladen fehlgeschlagen (${r.status})`);
+     return body;
+   },
+   deleteSkill: (name: string) => del<{ deleted: string }>(`/skills/${name}`),
 diff --git a/web/src/lib/chat-mentions.ts b/web/src/lib/chat-mentions.ts
 index ea3b08b..de4bca4 100644
 --- a/web/src/lib/chat-mentions.ts

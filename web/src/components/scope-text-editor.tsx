@@ -67,10 +67,10 @@ export function ScopeTextEditor({
         <FieldError>
           {parsed.errors.slice(0, 5).map((item) => (
             <span key={`${item.line}-${item.error}`} className="block">
-              Line {item.line}: {item.error}
+              Zeile {item.line}: {item.error}
             </span>
           ))}
-          {parsed.errors.length > 5 && <span className="block">And {parsed.errors.length - 5} more line errors</span>}
+          {parsed.errors.length > 5 && <span className="block">Weitere fehlerhafte Zeilen: {parsed.errors.length - 5}</span>}
         </FieldError>
       )}
     </Field>

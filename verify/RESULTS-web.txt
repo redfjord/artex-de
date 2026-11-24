@@ -1,5 +1,5 @@
 
-REVIEW - 10 changed literals in logic positions (confirm they are display text):
+REVIEW - 11 changed literals in logic positions (confirm they are display text):
   app/(main)/dashboard/page.tsx [jsx-attr sub]
       before: "By type"
       after:  "Nach Typ"
@@ -27,9 +27,12 @@ REVIEW - 10 changed literals in logic positions (confirm they are display text):
   app/(main)/function/tasks/page.tsx [jsx-attr name]
       before: "Uncategorized"
       after:  "Ohne Kategorie"
+  app/layout.tsx [jsx-attr lang]
+      before: "en"
+      after:  "de"
   components/transcript.tsx [comparison]
       before: "Command"
       after:  "Befehl"
 
-web files: 189 | syntax tree identical: 117 | only text changed: 72 (1672 string literals + JSX text) | new URLs: 0
+web files: 189 | syntax tree identical: 97 | only text changed: 92 (1809 string literals + JSX text) | new URLs: 0
 RESULT: PASS - syntax trees, identifiers, imports and URLs are unchanged; only display text differs.

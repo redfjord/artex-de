@@ -35,7 +35,7 @@ export function FindingLineageView({ findingId }: { findingId: string }) {
   if (loaded && nodes.length === 0) {
     return (
       <p className="text-muted-foreground p-6 text-sm">
-        No lineage to display (this finding has no linked exploration node, or its task has been deleted).
+        Keine Herkunftsdaten verfügbar. Der Fund ist mit keinem Knoten verknüpft oder die zugehörige Aufgabe wurde gelöscht.
       </p>
     );
   }
@@ -45,7 +45,7 @@ export function FindingLineageView({ findingId }: { findingId: string }) {
       nodes={nodes}
       edges={edges}
       className="h-[68vh]"
-      emptyHint={loaded ? "No lineage" : "Loading…"}
+      emptyHint={loaded ? "Keine Herkunftsdaten" : "Wird geladen …"}
     />
   );
 }

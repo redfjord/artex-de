@@ -1639,9 +1639,9 @@ export function SessionsTab({ taskId }: { taskId: string }) {
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  Eingabe {taskTokens.input_tokens.toLocaleString()} · Output {taskTokens.output_tokens.toLocaleString()} ·
-                  Cache-Lese {taskTokens.cache_read_tokens.toLocaleString()} · Cache-Schreibe{" "}
-                  {taskTokens.cache_write_tokens.toLocaleString()}
+                  Eingabe {taskTokens.input_tokens.toLocaleString("de-DE")} · Output {taskTokens.output_tokens.toLocaleString("de-DE")} ·
+                  Cache-Lese {taskTokens.cache_read_tokens.toLocaleString("de-DE")} · Cache-Schreibe{" "}
+                  {taskTokens.cache_write_tokens.toLocaleString("de-DE")}
                 </TooltipContent>
               </Tooltip>
             )}
@@ -1818,10 +1818,10 @@ export function SessionsTab({ taskId }: { taskId: string }) {
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>
-                      Eingabe {activeTokens.input_tokens.toLocaleString()} · Output{" "}
-                      {activeTokens.output_tokens.toLocaleString()} · Cache read{" "}
-                      {activeTokens.cache_read_tokens.toLocaleString()} · Cache-Schreibe{" "}
-                      {activeTokens.cache_write_tokens.toLocaleString()}
+                      Eingabe {activeTokens.input_tokens.toLocaleString("de-DE")} · Output{" "}
+                      {activeTokens.output_tokens.toLocaleString("de-DE")} · Cache read{" "}
+                      {activeTokens.cache_read_tokens.toLocaleString("de-DE")} · Cache-Schreibe{" "}
+                      {activeTokens.cache_write_tokens.toLocaleString("de-DE")}
                     </TooltipContent>
                   </Tooltip>
                 )}

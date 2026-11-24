@@ -49,7 +49,7 @@ import { api } from "@/lib/api";
 import type { LLMRecordItem, LLMRecordDetail, LLMTask } from "@/lib/types";
 
 function fmtTime(ts: string) {
-  return new Date(ts).toLocaleString("zh-CN", {
+  return new Date(ts).toLocaleString("de-DE", {
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
@@ -270,7 +270,7 @@ export default function LLMRecordsPage() {
         <div className="relative max-w-sm flex-1">
           <SearchIcon className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search session ID..."
+            placeholder="Sitzungs-ID suchen …"
             value={session}
             onChange={(e) => setSession(e.target.value)}
             className="h-8 pl-8"
@@ -284,12 +284,12 @@ export default function LLMRecordsPage() {
         />
         <Select value={pickedTask} onValueChange={setPickedTask}>
           <SelectTrigger size="sm" className="w-56">
-            <SelectValue placeholder="Select task…" />
+            <SelectValue placeholder="Aufgabe auswählen …" />
           </SelectTrigger>
           <SelectContent>
             {tasks.length === 0 ? (
               <SelectItem value="__none__" disabled>
-                No task records
+                Keine Aufgaben aufgezeichnet
               </SelectItem>
             ) : (
               tasks.map((t) => (
@@ -310,7 +310,7 @@ export default function LLMRecordsPage() {
           onClick={() => setDeleteOpen(true)}
         >
           <Trash2Icon className="size-3.5" />
-          Delete task conversations
+          Konversationen der Aufgabe löschen
         </Button>
         <Select value={String(size)} onValueChange={(v) => setSize(Number(v))}>
           <SelectTrigger size="sm" className="w-28">
@@ -400,7 +400,7 @@ export default function LLMRecordsPage() {
                 ) : records.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="py-12 text-center text-sm text-muted-foreground">
-                      No LLM calls recorded
+                      Keine LLM-Aufrufe aufgezeichnet
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -444,7 +444,7 @@ export default function LLMRecordsPage() {
                         {rec.status === "ok" ? (
                           <Badge variant="secondary" className="text-xs text-emerald-600">OK</Badge>
                         ) : (
-                          <Badge variant="destructive" className="text-xs">Error</Badge>
+                          <Badge variant="destructive" className="text-xs">Fehler</Badge>
                         )}
                       </TableCell>
                     </TableRow>
@@ -483,7 +483,7 @@ export default function LLMRecordsPage() {
               {selected.status === "ok" ? (
                 <Badge variant="secondary" className="text-xs text-emerald-600">OK</Badge>
               ) : (
-                <Badge variant="destructive" className="text-xs">Error</Badge>
+                <Badge variant="destructive" className="text-xs">Fehler</Badge>
               )}
               {/* Raw view toggle. Old records have no raw data, so it is disabled rather than silently falling back, to avoid the
                       appearance that "raw and parsed are identical". */}
@@ -510,14 +510,14 @@ export default function LLMRecordsPage() {
             <div className="grid min-h-0 flex-1 grid-cols-2 divide-x">
               <div className="flex min-h-0 min-w-0 flex-col">
                 <div className="flex items-center gap-2 border-b py-0.5 pr-1.5 pl-3 text-[11px] font-medium text-muted-foreground">
-                  <span>Request{showRaw && " · raw"}</span>
+                  <span>Anfrage{showRaw && " · Rohdaten"}</span>
                   <CopyButton text={reqText || ""} />
                 </div>
                 <div className="min-h-0 flex-1 overflow-auto">
                   {detailLoading ? (
                     <div className="flex items-center gap-2 p-3 text-xs text-muted-foreground">
                       <Loader2Icon className="size-3.5 animate-spin" />
-                      Loading…
+                      Wird geladen …
                     </div>
                   ) : (
                     <pre className="p-3 font-mono text-xs break-all whitespace-pre-wrap">
@@ -528,14 +528,14 @@ export default function LLMRecordsPage() {
               </div>
               <div className="flex min-h-0 min-w-0 flex-col">
                 <div className="flex items-center gap-2 border-b py-0.5 pr-1.5 pl-3 text-[11px] font-medium text-muted-foreground">
-                  <span>Response{showRaw && " · raw (SSE)"}</span>
+                  <span>Antwort{showRaw && " · Rohdaten (SSE)"}</span>
                   <CopyButton text={respText || ""} />
                 </div>
                 <div className="min-h-0 flex-1 overflow-auto">
                   {detailLoading ? (
                     <div className="flex items-center gap-2 p-3 text-xs text-muted-foreground">
                       <Loader2Icon className="size-3.5 animate-spin" />
-                      Loading…
+                      Wird geladen …
                     </div>
                   ) : (
                     <pre className={cn(
@@ -555,13 +555,13 @@ export default function LLMRecordsPage() {
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete all LLM conversations for task "{pickedTask}"?</AlertDialogTitle>
+            <AlertDialogTitle>Alle LLM-Konversationen der Aufgabe „{pickedTask}“ löschen?</AlertDialogTitle>
             <AlertDialogDescription>
-              This permanently deletes all LLM call records for this task (including raw request/response). This action cannot be undone.
+              Alle LLM-Aufzeichnungen dieser Aufgabe werden endgültig gelöscht, einschließlich der ursprünglichen Anfragen und Antworten. Das lässt sich nicht rückgängig machen.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();

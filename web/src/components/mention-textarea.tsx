@@ -230,7 +230,7 @@ export function MentionTextarea({ value, onValueChange, onKeyDown, className, in
           onInteractOutside={(event) => {
             if (event.target === textarea.current) event.preventDefault();
           }}
-          aria-label="Select records to reference"
+          aria-label="Datensätze zum Verknüpfen auswählen"
         >
           <div className="flex items-center justify-between px-2 py-1 text-muted-foreground text-xs">
             <span>
@@ -238,7 +238,7 @@ export function MentionTextarea({ value, onValueChange, onKeyDown, className, in
                 ? "Select reference type"
                 : `Search ${mentionKinds.find((kind) => kind.kind === search.kind)?.label ?? "all records"}`}
             </span>
-            <span>↑↓ to select · Enter to confirm · Esc to close</span>
+            <span>↑↓ Auswählen · Eingabetaste bestätigen · Esc schließen</span>
           </div>
           <div
             id={listId}
@@ -272,17 +272,17 @@ export function MentionTextarea({ value, onValueChange, onKeyDown, className, in
             {!categories.length && loading && (
               <div role="status" className="flex items-center gap-2 p-3 text-muted-foreground text-sm">
                 <Loader2Icon className="size-4 animate-spin" />
-                Searching…
+                Suche läuft …
               </div>
             )}
             {!categories.length && !loading && error && (
               <div role="alert" className="p-3 text-destructive text-sm">
-                Search failed: {error}. Type again to retry.
+                Suche fehlgeschlagen: {error}. Geben Sie einen neuen Suchbegriff ein.
               </div>
             )}
             {!categories.length && !loading && !error && !items.length && (
               <div role="status" className="p-3 text-muted-foreground text-sm">
-                No matching records; try a different name, address, or ID
+                Keine passenden Datensätze. Versuchen Sie einen anderen Namen, eine andere Adresse oder ID.
               </div>
             )}
             {items.map((item, index) => (
@@ -310,17 +310,17 @@ export function MentionTextarea({ value, onValueChange, onKeyDown, className, in
           </div>
           {!categories.length && (
             <p className="px-2 py-1 text-muted-foreground text-xs">
-              {loadingMore && <span role="status">Loading more…</span>}
+              {loadingMore && <span role="status">Weitere Einträge werden geladen …</span>}
               {!loadingMore && nextCursor && (
                 <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={loadMore}>
-                  {pageError ? "Load failed, click to retry" : `Showing ${items.length} items, scroll down to load more`}
+                  {pageError ? "Laden fehlgeschlagen. Klicken, um es erneut zu versuchen." : `Einträge angezeigt: ${items.length}. Nach unten scrollen, um weitere zu laden.`}
                 </button>
               )}
-              {!loadingMore && !nextCursor && !loading && !error && items.length > 0 && `Showing all ${items.length} items`}
+              {!loadingMore && !nextCursor && !loading && !error && items.length > 0 && `Alle Einträge angezeigt (${items.length})`}
               {!loadingMore &&
                 !nextCursor &&
                 (loading || !!error || items.length === 0) &&
-                "Enter a name, address, or ID to search records"}
+                "Geben Sie einen Namen, eine Adresse oder eine ID ein"}
             </p>
           )}
         </PopoverContent>
@@ -335,7 +335,7 @@ export function MentionTextarea({ value, onValueChange, onKeyDown, className, in
               <button
                 type="button"
                 disabled={disabled}
-                aria-label={`Remove reference ${item.label}`}
+                aria-label={`Verweis „${item.label}“ entfernen`}
                 onClick={() => {
                   onValueChange(value.slice(0, item.start) + value.slice(item.start + item.token.length));
                   setCursor(null);
@@ -345,7 +345,7 @@ export function MentionTextarea({ value, onValueChange, onKeyDown, className, in
               </button>
             </Badge>
           ))}
-          <span className="text-muted-foreground text-xs">Latest details are read when sent · Up to 10</span>
+          <span className="text-muted-foreground text-xs">Beim Senden werden die aktuellen Details geladen · Bis zu 10 Verweise</span>
         </div>
       )}
     </div>

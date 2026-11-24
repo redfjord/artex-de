@@ -137,11 +137,11 @@ function ActivityTime({ ts }: { ts: string }) {
   return (
     <time
       dateTime={date.toISOString()}
-      title={date.toLocaleString("zh-CN")}
+      title={date.toLocaleString("de-DE")}
       className="text-[10px] text-muted-foreground tabular-nums"
       suppressHydrationWarning
     >
-      {date.toLocaleString("zh-CN", {
+      {date.toLocaleString("de-DE", {
         month: "2-digit",
         day: "2-digit",
         hour: "2-digit",
@@ -267,7 +267,7 @@ function InterceptCard({
             <div className="flex items-center gap-1.5 font-medium">
               <span className="text-amber-700 dark:text-amber-400">Genehmigungsanfrage</span>
               <code className="rounded bg-amber-100 dark:bg-amber-900/50 px-1 font-mono text-amber-800 dark:text-amber-300">
-                {toolName}
+                {pending?.tool_name || (typeof detail?.tool === "string" ? detail.tool : toolName)}
               </code>
               {pendingId && (
                 <span className="text-muted-foreground">#{pendingId}</span>

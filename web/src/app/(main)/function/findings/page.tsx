@@ -878,7 +878,7 @@ export default function FindingsPage() {
                 ["low", "Niedrig"],
               ] as const
             ).map(([val, label]) => (
-              <ToggleGroupItem key={val} value={val} aria-label={`Filter by ${label} severity`}>
+              <ToggleGroupItem key={val} value={val} aria-label={`Nach Schweregrad „${label}“ filtern`}>
                 {label}
               </ToggleGroupItem>
             ))}
@@ -1213,8 +1213,8 @@ export default function FindingsPage() {
               <span className="text-xs text-muted-foreground">Exportumfang</span>
               <RadioGroup value={exportScope} onValueChange={(v) => setExportScope(v as typeof exportScope)}>
                 <label htmlFor="export-scope-filtered" className="flex items-center gap-2 text-sm">
-                  <RadioGroupItem id="export-scope-filtered" value="filtered" /> Export current filtered results ({filteredTotal}{" "}
-                  total)
+                  <RadioGroupItem id="export-scope-filtered" value="filtered" /> Gefilterte Ergebnisse exportieren ({filteredTotal}{" "}
+                  insgesamt)
                 </label>
                 <label htmlFor="export-scope-all" className="flex items-center gap-2 text-sm">
                   <RadioGroupItem id="export-scope-all" value="all" /> Alle exportieren
