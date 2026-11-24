@@ -60,7 +60,7 @@ jobs:
       - run: go vet ./...
       - name: Run every Go test with fresh PostgreSQL state
         run: python3 ci/go-tests-isolated.py
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: go-regression-results
@@ -171,7 +171,7 @@ jobs:
       - name: Record image digest
         run: docker image inspect artex-de:ci --format '{{.Id}}' | tee image-id.txt
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: image-id
           path: image-id.txt
