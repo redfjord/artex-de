@@ -22,7 +22,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.safe
-    image: failsafe-security/artex:v0.3.15-safe
+    image: artex-de:local
+    pull_policy: build
     depends_on:
       postgres:
         condition: service_healthy

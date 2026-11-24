@@ -1,5 +1,7 @@
 # ARTEX-DE — Deutsche Lokalisierung von FailSafe ARTEX
 
+[![CI einschließlich Übersetzungsnachweis](https://github.com/redfjord/artex-de/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/redfjord/artex-de/actions/workflows/build.yml?query=branch%3Amain)
+
 > **Inoffizieller Community-Fork.** Dieses Repository ist eine deutsche Übersetzung von
 > [FailSafe ARTEX](README.failsafe.md) `v0.3.15`. Es wird **nicht** von FailSafe Cyber Frontier Labs,
 > von `RuoJi6/ARTEX` oder von den ursprünglichen ARTEX-Autoren betrieben, geprüft oder unterstützt.
@@ -33,9 +35,9 @@ Der Schwerpunkt liegt auf der deutschen Oberfläche und den Meldungen:
 | Tests | erwartete Ausgabetexte an die deutschen Texte angepasst |
 
 **Unverändert (byte-identisch zur FailSafe-Basis):** `go.mod`, `go.sum`, `web/package.json`,
-`web/package-lock.json`, `Dockerfile.safe`, `docker-compose.safe.yml`, `start.sh`, `Makefile`,
-`.dockerignore` und das komplette `skills/`-Verzeichnis. Es gibt keine neuen Abhängigkeiten,
-keine neuen Programmdateien und keine neuen Netzwerkziele.
+`web/package-lock.json`, `Dockerfile.safe`, `start.sh`, `.dockerignore` und das komplette
+`skills/`-Verzeichnis. Docker Compose und das Makefile verwenden den lokalen Image-Namen
+`artex-de:local`. CI verwendet `artex-de:ci`. Das konfigurierte Online-Selfupdate ist deaktiviert.
 
 **Bewusst nicht übersetzt** (weil diese Texte Logik oder Protokoll sind, nicht Anzeige):
 
@@ -61,9 +63,10 @@ Ein Übersetzungs-Fork ist ein naheliegendes Versteck für Schadcode. Deshalb li
 
 Das Skript prüft die rekonstruierte FailSafe-Basis gegen eine festgelegte Prüfsumme. Der Vergleich berücksichtigt die in `verify/ui-compatibility.patch` dokumentierten Anpassungen der Oberfläche:
 
-1. **Go:** Alle 335 `.go`-Dateien werden mit dem offiziellen Go-Tokenizer zerlegt. Ohne
-   Kommentare und Text-Literale ist der Code **token-identisch**. Geändert wurden ausschließlich
-   Literale, die vorher chinesischen Text enthielten.
+1. **Go:** Der Vergleich verwendet ausschließlich **FailSafe ARTEX `v0.3.15-safe`** als
+   Referenz. Ohne Kommentare und Inhalte von Textliteralen sind die Tokenfolgen der 335 Go-Dateien
+   identisch zu diesem Stand. Die Änderungen von `RuoJi6/ARTEX` bis zur FailSafe-Basis sind separat
+   in [UPSTREAM.md](UPSTREAM.md) dokumentiert.
 2. **Web:** Alle 189 TypeScript/TSX-Dateien werden mit dem projekteigenen TypeScript-Compiler
    geparst. Im reinen Übersetzungsvergleich sind die **Syntaxbäume identisch**. Die Umstellung auf deutsche Zahlenformate, die Behandlung des HTTP-Status beim Archiv und die Anzeige des Toolnamens im Transkript stehen separat im Anpassungspatch.
 3. **Keine neuen URLs oder Domains**, die die Prüfer in den untersuchten Go- und Web-Texten erkennen.
@@ -71,6 +74,18 @@ Das Skript prüft die rekonstruierte FailSafe-Basis gegen eine festgelegte Prüf
 
 Ergebnisse, Methodik, Grenzen des Nachweises und alle bei der Prüfung gefundenen und behobenen
 Übersetzungsfehler: **[SICHERHEITSNACHWEIS.md](SICHERHEITSNACHWEIS.md)**.
+
+## Deutsche Oberfläche
+
+Anmeldung und Ersteinrichtung aus dem deutschen Web-Build mit simuliertem Einrichtungsstatus.
+
+| Anmeldung | Ersteinrichtung |
+| --- | --- |
+| ![Deutsche Anmeldemaske](screenshots/artex-de-anmeldung.png) | ![Deutsche Passwort-Einrichtung](screenshots/artex-de-einrichtung.png) |
+
+Der [veröffentlichte Release v0.3.15-de.1](https://github.com/redfjord/artex-de/releases/tag/v0.3.15-de.1)
+enthält das ursprüngliche ZIP und die zugehörige `SHA256SUMS.txt`. Das CI-Abzeichen oben zeigt
+den Status von `main`, einschließlich des Jobs `translation-verification`.
 
 ## Schnellstart
 

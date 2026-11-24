@@ -21,7 +21,7 @@ und Eingaben liegen im Repository; jeder kann den Nachweis mit einem Befehl selb
 | Web-UI: Syntaxbaum-Vergleich aller 189 TS/TSX-Dateien | **PASS** nach Rücknahme des dokumentierten UI-Anpassungspatches. 92 Dateien mit geändertem Text, 97 ohne Textänderung |
 | Neue Dateien / gelöschte Dateien im Code | **0 / 0** |
 | Neue URLs oder Domains in Texten | **0** (Go und Web) |
-| Abhängigkeits-, Build- und Laufzeitdateien | **byte-identisch** (`go.mod`, `go.sum`, `package.json`, `package-lock.json`, `Dockerfile.safe`, `docker-compose.safe.yml`, `start.sh`, `Makefile`, `.dockerignore`, `skills/`) |
+| Abhängigkeits-, Build- und Laufzeitdateien | **byte-identisch** (`go.mod`, `go.sum`, `package.json`, `package-lock.json`, `Dockerfile.safe`, `start.sh`, `.dockerignore`, `skills/`) |
 | Indikatoren des `tomicdd`-Backdoors (`verifyCaptcha`, `tomicdd`, `congdonglinux`) | **nicht vorhanden** (Quelltext und gebautes Binary, siehe unten) |
 | API-Schlüssel, Tokens und private Schlüssel in den geprüften Dateien | **0 Treffer** |
 | Go-Testsuite (`go test ./...`) | Auf `main` mit isoliertem PostgreSQL: **676 bestanden, 0 fehlgeschlagen, 1 übersprungen** ([CI-Lauf](https://github.com/redfjord/artex-de/actions/runs/45385588981)). |
@@ -51,8 +51,7 @@ die Prüfungen aus:
   deshalb alle URLs und Domains aus allen Texten von Basis und Fork. Jede neue Adresse wäre ein
   `FAIL`. Es gibt keine.
 - **Keine Lieferkettenänderung:** Lockfiles, Modul-Prüfsummen (`go.sum`), Dockerfile mit
-  digest-gepinnten Basis-Images und Build-Skripte sind byte-identisch. Es wird also exakt
-  dieselbe Software-Lieferkette gebaut wie bei FailSafe.
+  den festgelegten Basis-Image-Digests und das Startskript sind byte-identisch. Die Docker-Konfiguration nutzt eigene lokale Image-Namen.
 
 ## Grenzen des Nachweises (ehrlich)
 
