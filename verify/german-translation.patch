@@ -242,6 +242,19 @@ index 8331d5f..b04a643 100644
  
  func (t *ToolSet) SetFindingRecorder(r FindingRecorder)   { t.findingRecorder = r }
  func (w *Worker) SetFindingRecorder(r FindingRecorder)    { w.findingRecorder = r }
+diff --git a/agent/finding_recorder_test.go b/agent/finding_recorder_test.go
+index db7d90a..d571235 100644
+--- a/agent/finding_recorder_test.go
++++ b/agent/finding_recorder_test.go
+@@ -99,7 +99,7 @@ func TestReportFindingAtomicContract(t *testing.T) {
+ 	if err != nil || f == nil || f.NodeID == nil || *f.NodeID != out.NodeID {
+ 		t.Fatalf("wrong finding/node mapping: %+v %v", f, err)
+ 	}
+-	if got = call(`{"vulnclass":"TEST","summary":"no storage","severity":"low","traffic_refs":[{"traffic_id":"x"}]}`); !strings.Contains(got, "未登记") {
++	if got = call(`{"vulnclass":"TEST","summary":"no storage","severity":"low","traffic_refs":[{"traffic_id":"x"}]}`); !strings.Contains(got, "nicht registriert") {
+ 		t.Fatal(got)
+ 	}
+ 	if notices != 1 {
 diff --git a/agent/finding_workflow.go b/agent/finding_workflow.go
 index 7b86c7d..6c4d22e 100644
 --- a/agent/finding_workflow.go
@@ -3744,6 +3757,19 @@ index 172e52c..9259e31 100644
  				audit["execution_status"] = "not_executed"
  			}
  		} else if audit, ok := row["audit"].(map[string]any); ok && audit["execution_status"] == "awaiting_result" {
+diff --git a/db/task_archives_test.go b/db/task_archives_test.go
+index 498fa97..0829984 100644
+--- a/db/task_archives_test.go
++++ b/db/task_archives_test.go
+@@ -271,7 +271,7 @@ VALUES($1,$2,0,'quota_exhausted','balance exhausted',$3,$4,$3)`, task.ID, llmPro
+ 	}
+ 	warningFound := false
+ 	for _, warning := range warnings {
+-		if strings.Contains(warning, fmt.Sprintf("任务企业 %d 已删除", companyID)) {
++		if strings.Contains(warning, fmt.Sprintf("Aufgabenunternehmen %d gelöst", companyID)) {
+ 			warningFound = true
+ 		}
+ 	}
 diff --git a/db/task_assets.go b/db/task_assets.go
 index cd8823c..54bcc85 100644
 --- a/db/task_assets.go
@@ -3922,6 +3948,19 @@ index 26a82f8..7999896 100644
             WHEN $2 > 0 THEN now() + make_interval(secs => $2)
             ELSE NULL END
   WHERE id = $1
+diff --git a/db/tasks_test.go b/db/tasks_test.go
+index 3008273..c0ce73b 100644
+--- a/db/tasks_test.go
++++ b/db/tasks_test.go
+@@ -607,7 +607,7 @@ RETURNING id`, domainB, companyB).Scan(&companyAssetB); err != nil {
+ 			t.Errorf("company asset %d missing from task", assetID)
+ 			continue
+ 		}
+-		if asset.TaskSource != taskCompanyAssetSource || asset.TaskSourceSummary != "任务创建时关联企业："+companyName {
++		if asset.TaskSource != taskCompanyAssetSource || asset.TaskSourceSummary != "Bei Aufgabenerstellung verknüpftes Unternehmen: "+companyName {
+ 			t.Errorf("asset %d provenance=%q/%q", assetID, asset.TaskSource, asset.TaskSourceSummary)
+ 		}
+ 	}
 diff --git a/enrich/enrich.go b/enrich/enrich.go
 index 7c8fc13..b9cee37 100644
 --- a/enrich/enrich.go
@@ -6084,6 +6123,37 @@ index b0a6b09..76f9ca6 100644
  		return
  	}
  	writeJSON(w, 200, map[string]any{"token": tok})
+diff --git a/server/chat_llm_resolve_test.go b/server/chat_llm_resolve_test.go
+index 5108988..71d1067 100644
+--- a/server/chat_llm_resolve_test.go
++++ b/server/chat_llm_resolve_test.go
+@@ -30,7 +30,7 @@ func TestChatUnavailableReasonDistinguishesStates(t *testing.T) {
+ 		_ = m.pg.DeleteProfile(p.ID)
+ 	}
+ 
+-	if reason := s.chatUnavailableReason(); !strings.Contains(reason, "尚未配置") {
++	if reason := s.chatUnavailableReason(); !strings.Contains(reason, "LLM noch nicht konfiguriert") {
+ 		t.Fatalf("no-profile reason=%q, want 尚未配置", reason)
+ 	}
+ 
+@@ -44,7 +44,7 @@ func TestChatUnavailableReasonDistinguishesStates(t *testing.T) {
+ 	})
+ 
+ 	// Profile exists but is not activated.
+-	if reason := s.chatUnavailableReason(); !strings.Contains(reason, "没有已激活") {
++	if reason := s.chatUnavailableReason(); !strings.Contains(reason, "Keine aktivierte LLM-Konfiguration") {
+ 		t.Fatalf("inactive reason=%q, want 没有已激活", reason)
+ 	}
+ 
+@@ -52,7 +52,7 @@ func TestChatUnavailableReasonDistinguishesStates(t *testing.T) {
+ 	if err := m.pg.SetActiveProfile(id); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if reason := s.chatUnavailableReason(); strings.Contains(reason, "尚未配置") || strings.Contains(reason, "没有已激活") {
++	if reason := s.chatUnavailableReason(); strings.Contains(reason, "LLM noch nicht konfiguriert") || strings.Contains(reason, "Keine aktivierte LLM-Konfiguration") {
+ 		t.Fatalf("active reason=%q should not report missing/inactive", reason)
+ 	}
+ }
 diff --git a/server/chat_mentions.go b/server/chat_mentions.go
 index 7aad463..e91b376 100644
 --- a/server/chat_mentions.go
@@ -6161,9 +6231,18 @@ index 7aad463..e91b376 100644
  		for i := range v {
  			v[i] = boundChatMentionValue(v[i])
 diff --git a/server/chat_mentions_test.go b/server/chat_mentions_test.go
-index 616a00e..5403272 100644
+index 616a00e..13126f8 100644
 --- a/server/chat_mentions_test.go
 +++ b/server/chat_mentions_test.go
+@@ -177,7 +177,7 @@ func TestChatMentionWorkerReceivesServerDetails(t *testing.T) {
+ 	select {
+ 	case req := <-requests:
+ 		blob, _ := json.Marshal(req.Messages)
+-		if !strings.Contains(string(blob), "worker-hidden-proof") || !strings.Contains(string(blob), "用户引用的记录快照") {
++		if !strings.Contains(string(blob), "worker-hidden-proof") || !strings.Contains(string(blob), "Snapshot der benutzerreferenzierten Datensätze") {
+ 			t.Fatalf("worker missing reference details: %s", blob)
+ 		}
+ 	case <-time.After(5 * time.Second):
 @@ -213,7 +213,7 @@ func TestChatMentionBoundedJSON(t *testing.T) {
  		items[i] = long
  	}
@@ -6173,6 +6252,15 @@ index 616a00e..5403272 100644
  		t.Fatal("missing truncation markers")
  	}
  	encoded, err := json.Marshal(v)
+@@ -304,7 +304,7 @@ func TestChatMentionConversationReceivesServerDetails(t *testing.T) {
+ 	s, fid := newRetestServer(t)
+ 	setRetestProvider(s, retestProvider{complete: func(_ context.Context, req llm.CompletionRequest) (llm.Message, string, llm.Usage, error) {
+ 		blob, _ := json.Marshal(req.Messages)
+-		if !strings.Contains(string(blob), "original proof") || !strings.Contains(string(blob), "用户引用的记录快照") {
++		if !strings.Contains(string(blob), "original proof") || !strings.Contains(string(blob), "Snapshot der benutzerreferenzierten Datensätze") {
+ 			t.Errorf("model did not receive resolved evidence: %s", blob)
+ 		}
+ 		return llm.Message{Role: llm.RoleAssistant, Content: []llm.ContentBlock{llm.TextBlock("已读取引用")}}, "end_turn", llm.Usage{}, nil
 diff --git a/server/chatupload.go b/server/chatupload.go
 index 82ae080..77890ac 100644
 --- a/server/chatupload.go
@@ -7243,6 +7331,19 @@ index 103159e..233f8f7 100644
  		func(ctx context.Context, in json.RawMessage) (actool.Result, error) {
  			var a struct {
  				FindingID      json.RawMessage `json:"finding_id"`
+diff --git a/server/finding_traffic_test.go b/server/finding_traffic_test.go
+index a626c2a..7ac3447 100644
+--- a/server/finding_traffic_test.go
++++ b/server/finding_traffic_test.go
+@@ -352,7 +352,7 @@ func TestFindingTrafficArchiveV3RoundTripAndRetry(t *testing.T) {
+ 	}
+ 	// The read tool enforces task visibility too.
+ 	result, err := s.toolGetFindingTraffic().Call(agent.WithRunInfo(ctx, agent.RunInfo{TaskID: sid}), json.RawMessage(fmt.Sprintf(`{"finding_id":"%d"}`, f.FindingID)), nil)
+-	if err != nil || !strings.Contains(result.Flatten(), "不可读取") {
++	if err != nil || !strings.Contains(result.Flatten(), "nicht lesen") {
+ 		t.Fatal(result, err)
+ 	}
+ }
 diff --git a/server/finding_workflow.go b/server/finding_workflow.go
 index 3610753..9bfdc18 100644
 --- a/server/finding_workflow.go
@@ -7329,6 +7430,55 @@ index 3610753..9bfdc18 100644
  			}
  			list, err := s.evidenceStore().Bind(ctx, id, args.Refs)
  			if err != nil {
+diff --git a/server/finding_workflow_test.go b/server/finding_workflow_test.go
+index ada3b10..8379552 100644
+--- a/server/finding_workflow_test.go
++++ b/server/finding_workflow_test.go
+@@ -93,7 +93,7 @@ func TestFindingWorkflowAutoHintToPlannerAndSetting(t *testing.T) {
+ 	ts.SetNotifyFinding(func(int64, string) { notices++ })
+ 	tools, def, cleanup := agent.AugmentTools(ctx, "planner", ts.PlannerTools())
+ 	defer cleanup()
+-	if !strings.Contains(def.FindingGuidance, "evidence_hint_id") || !strings.Contains(def.FindingGuidance, "取消 Worker") {
++	if !strings.Contains(def.FindingGuidance, "evidence_hint_id") || !strings.Contains(def.FindingGuidance, "Worker nicht abbrechen") {
+ 		t.Fatal("Planner missed runtime guidance")
+ 	}
+ 	report := workflowTool(t, tools, "report_finding")
+@@ -131,7 +131,7 @@ func TestFindingWorkflowAutoHintToPlannerAndSetting(t *testing.T) {
+ 	}
+ 	workflowCall(t, ctx, s.toolGetFindingTraffic(), map[string]any{"finding_id": recorded.FindingID}, false)
+ 	wrong := workflowCall(t, ctx, s.toolGetFindingTraffic(), map[string]any{"finding_id": int64(900000000000000000)}, true)
+-	if !strings.Contains(wrong, "独立漏洞记录 ID") {
++	if !strings.Contains(wrong, "eigenständige Schwachstellen-Datensatz-IDs") {
+ 		t.Fatal("ambiguous ID error", wrong)
+ 	}
+ 	input["finding_id"] = recorded.FindingID
+@@ -175,7 +175,7 @@ func TestFindingWorkflowAutoHintToPlannerAndSetting(t *testing.T) {
+ 	if err := json.Unmarshal([]byte(strings.SplitN(offResult, "\n", 2)[1]), &offRecord); err != nil {
+ 		t.Fatal(err)
+ 	}
+-	if offRecord.FindingID <= 0 || len(offRecord.Traffic.Bindings) != 0 || offRecord.EvidenceStatus != "not_bound" || !strings.Contains(offRecord.EvidenceNote, "已关闭") {
++	if offRecord.FindingID <= 0 || len(offRecord.Traffic.Bindings) != 0 || offRecord.EvidenceStatus != "not_bound" || !strings.Contains(offRecord.EvidenceNote, "Auto-Traffic-Bindung deaktiviert") {
+ 		t.Fatal("disabled binding discarded finding or bound evidence", offResult)
+ 	}
+ 	workflowCall(t, ctx, report, map[string]any{"vulnclass": "TCP", "severity": "low", "summary": "no packet needed"}, false)
+@@ -246,7 +246,7 @@ func TestFindingWorkflowMigrationPreservesUserConfiguration(t *testing.T) {
+ 	}
+ 	search, _ := pg.GetTool("traffic_search")
+ 	get, _ := pg.GetTool("traffic_get")
+-	if !strings.Contains(search.Description, "支持裸主机、主机:端口或完整 URL") {
++	if !strings.Contains(search.Description, "unterstützt bare Hosts, Host:Port oder vollständige URLs") {
+ 		t.Fatal("traffic_search description migration missing host/port guidance")
+ 	}
+ 	if search.Enabled || !contains(search.Agents, "reporter") || get.Enabled || len(get.Agents) != 1 || get.Agents[0] != "custom-agent" {
+@@ -277,7 +277,7 @@ func TestFindingWorkflowReporterBindsBeforeWritingReport(t *testing.T) {
+ 	seedServerEvidenceFlow(t, s, "reporter-baseline", []byte("local normal response"))
+ 	tools, def, cleanup := agent.AugmentTools(ctx, "reporter", nil)
+ 	defer cleanup()
+-	if !strings.Contains(def.FindingGuidance, "报告前自动关联流量") || !strings.Contains(def.FindingGuidance, "绑定成功后重新调用") {
++	if !strings.Contains(def.FindingGuidance, "Automatische Datenverkehrs-Zuordnung vor dem Bericht") || !strings.Contains(def.FindingGuidance, "Nach erfolgreicher Bindung get_finding_traffic erneut aufrufen") {
+ 		t.Fatal("reporter did not receive binding workflow")
+ 	}
+ 	for _, name := range []string{"traffic_search", "traffic_get", "get_task_worker_trace", "get_task_node_detail", "bind_finding_traffic", "get_finding_traffic", "update_finding_report"} {
 diff --git a/server/findings_groups.go b/server/findings_groups.go
 index f7b47f0..1fa1cad 100644
 --- a/server/findings_groups.go
@@ -7351,6 +7501,19 @@ index f7b47f0..1fa1cad 100644
  		Detail:  description,
  	}
  	intentID, audit, err := t.Store.AddFindingFollowUpIntent(id, *finding.NodeID, description, audit)
+diff --git a/server/findings_groups_test.go b/server/findings_groups_test.go
+index 61c05b6..5da540f 100644
+--- a/server/findings_groups_test.go
++++ b/server/findings_groups_test.go
+@@ -216,7 +216,7 @@ func TestDeepenFindingCreatesAuditedIntentAndRevivesTask(t *testing.T) {
+ 	var persistedAudit db.Activity
+ 	auditCount := 0
+ 	for _, item := range activity {
+-		if item.Worker == "system" && strings.Contains(item.Summary, "人工提交漏洞深入利用意图") {
++		if item.Worker == "system" && strings.Contains(item.Summary, "Manuell eingereichte Absicht zur tiefen Ausnutzung einer Schwachstelle") {
+ 			persistedAudit = item
+ 			auditCount++
+ 		}
 diff --git a/server/goals.go b/server/goals.go
 index e5ded68..277ac74 100644
 --- a/server/goals.go
@@ -7750,6 +7913,19 @@ index fc51497..312a0d3 100644
  		return
  	}
  	writeJSON(w, 200, map[string]any{"conversation_id": target.ConversationID, "task_id": target.TaskID, "session": target.Session, "seq": target.Seq, "items": activityDTOs(target.Items)})
+diff --git a/server/intercept_detail_test.go b/server/intercept_detail_test.go
+index 4e1de34..633307f 100644
+--- a/server/intercept_detail_test.go
++++ b/server/intercept_detail_test.go
+@@ -93,7 +93,7 @@ func TestInterceptDetailHTTP(t *testing.T) {
+ 		t.Fatal(err)
+ 	}
+ 	deletedReply := do(http.MethodGet, fmt.Sprintf("/api/intercept/history/%d/execution?conversation=%d", sourceID, conv.ID), "", true)
+-	if deletedReply.Code != 410 || !strings.Contains(deletedReply.Body.String(), "对话已被删除") {
++	if deletedReply.Code != 410 || !strings.Contains(deletedReply.Body.String(), "Konversation wurde gelöscht") {
+ 		t.Fatalf("deleted conversation: %d %s", deletedReply.Code, deletedReply.Body.String())
+ 	}
+ 
 diff --git a/server/llmpool.go b/server/llmpool.go
 index 527e09c..3e6cf28 100644
 --- a/server/llmpool.go
@@ -8409,6 +8585,71 @@ index 7d1a49d..36cec0d 100644
  		return
  	}
  	writeErr(w, 500, err.Error())
+diff --git a/server/notify_api_test.go b/server/notify_api_test.go
+index fe3be74..d4ac1d3 100644
+--- a/server/notify_api_test.go
++++ b/server/notify_api_test.go
+@@ -241,7 +241,7 @@ func TestNotifyEndToEndRealtimeDelivery(t *testing.T) {
+ 		t.Fatalf("应发出 1 条消息，实际 %d", hook.count())
+ 	}
+ 	text := markdownText(t, hook.last(t))
+-	for _, want := range []string{"SQL注入", "高危", "摘要"} {
++	for _, want := range []string{"SQL注入", "Hoch", "Zusammenfassung"} {
+ 		if !strings.Contains(text, want) {
+ 			t.Fatalf("消息正文缺少 %q:\n%s", want, text)
+ 		}
+@@ -347,11 +347,11 @@ func TestNotifyChannelAPICreateValidation(t *testing.T) {
+ 		payload map[string]any
+ 		wantSub string
+ 	}{
+-		{"类型非法", map[string]any{"name": "x", "kind": "nope", "config": map[string]any{}}, "渠道类型无效"},
+-		{"缺名称", map[string]any{"kind": notify.KindDingTalk, "config": map[string]any{"webhook": "https://e.com/h"}}, "缺少渠道名称"},
++		{"类型非法", map[string]any{"name": "x", "kind": "nope", "config": map[string]any{}}, "Kanaltyp ungültig"},
++		{"缺名称", map[string]any{"kind": notify.KindDingTalk, "config": map[string]any{"webhook": "https://e.com/h"}}, "Kanalname fehlt"},
+ 		{"缺 webhook", map[string]any{"name": "x", "kind": notify.KindDingTalk, "config": map[string]any{}}, "Webhook"},
+-		{"webhook 协议非法", map[string]any{"name": "x", "kind": notify.KindDingTalk, "config": map[string]any{"webhook": "file:///etc/passwd"}}, "Webhook 地址无效"},
+-		{"模式非法", map[string]any{"name": "x", "kind": notify.KindDingTalk, "mode": "sometimes", "config": map[string]any{"webhook": "https://e.com/h"}}, "推送模式无效"},
++		{"webhook 协议非法", map[string]any{"name": "x", "kind": notify.KindDingTalk, "config": map[string]any{"webhook": "file:///etc/passwd"}}, "Webhook-Adresse ungültig"},
++		{"模式非法", map[string]any{"name": "x", "kind": notify.KindDingTalk, "mode": "sometimes", "config": map[string]any{"webhook": "https://e.com/h"}}, "Push-Modus ungültig"},
+ 	}
+ 	for _, tc := range cases {
+ 		t.Run(tc.name, func(t *testing.T) {
+@@ -427,7 +427,7 @@ func TestNotifyDigestBatchesMultipleFindingsIntoOneMessage(t *testing.T) {
+ 		t.Fatalf("三条应汇总成一条消息，实际发了 %d 条", got)
+ 	}
+ 	text := markdownText(t, hook.last(t))
+-	if !strings.Contains(text, "近") || !strings.Contains(text, "3 个漏洞") {
++	if !strings.Contains(text, "In den letzten 30 Minuten") || !strings.Contains(text, "3 neue Schwachstellen") {
+ 		t.Fatalf("汇总消息缺少条数/时间窗文案:\n%s", text)
+ 	}
+ 	for i := 1; i <= 3; i++ {
+@@ -488,7 +488,7 @@ func TestNotifyStatusChangeDelivery(t *testing.T) {
+ 	found := false
+ 	for i := 0; i < hook.count(); i++ {
+ 		text := markdownText(t, hook.body(t, i))
+-		if strings.Contains(text, "状态变更") && strings.Contains(text, "已修复") {
++		if strings.Contains(text, "Statusänderung") && strings.Contains(text, "Behoben") {
+ 			found = true
+ 		}
+ 	}
+@@ -538,7 +538,7 @@ func TestNotifyTestMessageEndpoint(t *testing.T) {
+ 		t.Fatalf("假接收端应收到 1 条测试消息，得到 %d", hook.count())
+ 	}
+ 	// 测试消息必须一眼能看出是测试，不能被误当成真实漏洞。
+-	if text := markdownText(t, hook.last(t)); !strings.Contains(text, "测试") {
++	if text := markdownText(t, hook.last(t)); !strings.Contains(text, "Testnachricht") {
+ 		t.Fatalf("测试消息应标明是测试: %s", text)
+ 	}
+ 	// 配置坏掉时应把渠道的原始错误如实回给用户。
+@@ -776,7 +776,7 @@ func TestNotifyDigestSegmentsAndDefersRemainder(t *testing.T) {
+ 		t.Fatalf("条目数对不上：sent=%d pending=%d total=%d（既没送达也没待发=丢失）", sent, pending, total)
+ 	}
+ 	// 消息正文必须如实告知还有多少条没包含在本条里。
+-	if text := markdownText(t, hook.last(t)); !strings.Contains(text, "其余") {
++	if text := markdownText(t, hook.last(t)); !strings.Contains(text, "restlichen") {
+ 		t.Fatalf("消息应说明还有条目未包含在本条:\n%.400s", text)
+ 	}
+ 
 diff --git a/server/orchestration.go b/server/orchestration.go
 index c5baa9b..a19b7c1 100644
 --- a/server/orchestration.go
@@ -10645,6 +10886,19 @@ index e176312..ef198b5 100644
  		return
  	}
  	items := make([]batchCategoryItem, 0, len(taskIDs))
+diff --git a/server/task_categories_test.go b/server/task_categories_test.go
+index 64f721a..8d48c42 100644
+--- a/server/task_categories_test.go
++++ b/server/task_categories_test.go
+@@ -45,7 +45,7 @@ func TestTaskCategoryBatchRoute(t *testing.T) {
+ 
+ 	// An empty selection is rejected before any database work.
+ 	if rec := post(`{"task_ids":[],"category_id":null}`); rec.Code != http.StatusBadRequest ||
+-		!strings.Contains(rec.Body.String(), "task_ids 数量必须为") {
++		!strings.Contains(rec.Body.String(), "task_ids Anzahl muss 1-100 betragen") {
+ 		t.Fatalf("empty task_ids: status=%d body=%s", rec.Code, rec.Body.String())
+ 	}
+ 
 diff --git a/server/task_control.go b/server/task_control.go
 index ea479e1..5b79f23 100644
 --- a/server/task_control.go

@@ -15,18 +15,20 @@ und Eingaben liegen im Repository; jeder kann den Nachweis mit einem Befehl selb
 
 | Prüfung | Ergebnis |
 |---|---|
-| Go-Code: Token-Vergleich aller 335 `.go`-Dateien | **PASS**: Code token-identisch; 139 Dateien mit geänderten Text-Literalen (1774 Literale), 196 komplett unverändert |
+| Go-Code: Token-Vergleich aller 335 `.go`-Dateien | **PASS**: Code token-identisch; 149 Dateien mit geänderten Text-Literalen (1805 Literale), 186 ohne geänderte Text-Literale |
 | Geänderte Go-Literale enthielten vorher Chinesisch | **PASS**: kein anderes Literal angefasst |
 | Web-UI: Syntaxbaum-Vergleich aller 189 TS/TSX-Dateien | **PASS**: Syntaxbäume identisch; 72 Dateien mit geändertem Anzeigetext, 117 komplett unverändert |
 | Neue Dateien / gelöschte Dateien im Code | **0 / 0** |
 | Neue URLs oder Domains in Texten | **0** (Go und Web) |
 | Abhängigkeits-, Build- und Laufzeitdateien | **byte-identisch** (`go.mod`, `go.sum`, `package.json`, `package-lock.json`, `Dockerfile.safe`, `docker-compose.safe.yml`, `start.sh`, `Makefile`, `.dockerignore`, `skills/`) |
 | Indikatoren des `tomicdd`-Backdoors (`verifyCaptcha`, `tomicdd`, `congdonglinux`) | **nicht vorhanden** (Quelltext und gebautes Binary, siehe unten) |
-| API-Schlüssel, Tokens, private Schlüssel, persönliche Daten im Repository | **0 Treffer** |
-| Go-Testsuite (`go test ./...`) | **identisch zur Basis**: dieselben 22 Tests schlagen in Basis und ARTEX-DE fehl, weil sie eine laufende PostgreSQL-Datenbank brauchen; 0 zusätzliche Fehlschläge |
+| API-Schlüssel, Tokens und private Schlüssel in den geprüften Dateien | **0 Treffer** |
+| Go-Testsuite (`go test ./...`) | Auf `main` mit isoliertem PostgreSQL: **676 bestanden, 0 fehlgeschlagen, 1 übersprungen** ([CI-Lauf](https://github.com/redfjord/artex-de/actions/runs/45385588981)). |
 
 Die Rohausgaben stehen in `verify/RESULTS-go.txt`, `verify/RESULTS-web.txt` und
-`verify/RESULTS-tests.txt`.
+`verify/RESULTS-tests.txt`. Die letztere Datei dokumentiert den früheren Vergleich ohne PostgreSQL.
+Der Tag `v0.3.15-de.1` und sein ZIP archivieren den Stand vor den Testkorrekturen.
+Der [CI-Lauf des Tags](https://github.com/redfjord/artex-de/actions/runs/45378515675) meldet 19 Fehlschläge.
 
 ## Warum dieser Nachweis aussagekräftig ist
 
@@ -121,8 +123,8 @@ cd artex-de
 
 Das Skript arbeitet in vier Schritten:
 
-1. Es rekonstruiert die FailSafe-Basis in `../artex-failsafe-base`, indem es
-   `verify/german-translation.patch` rückwärts anwendet.
+1. Es rekonstruiert die FailSafe-Basis in einem eigenen temporären Verzeichnis, indem es
+   `verify/german-translation.patch` rückwärts anwendet. Das Verzeichnis wird beim Beenden entfernt.
 2. Es führt den Go-Tokenvergleich aus.
 3. Es installiert per `npm ci --ignore-scripts` exakt die im Lockfile festgelegten Pakete und führt
    den TypeScript-Syntaxbaum-Vergleich aus.
@@ -135,14 +137,14 @@ Zeile.
 
 ## Prüfsummen
 
-SHA-256 der Nachweisdateien in diesem Release:
+SHA-256 der Nachweisdateien auf diesem Stand:
 
 ```
-828732427fdb3c7cc4f7627c8945b01777ce1a2a071232f8fe0deea1671392ef  verify/german-translation.patch
+125eb369f4115ffdb7c27e5e0479e57b65eb893e3b40123d8f5f7240fe0e94ad  verify/german-translation.patch
 5753e1f9a21db1c6ec7118abc01ca789b00aff491148196bb215cc2bac332623  verify/go-tokens/main.go
 456fd6f76f8e2d54146b16642149066d38c7603b3e528b77c660769bac06e2ae  verify/go-tokens/go.mod
 27ea817f034e8178a262475872cfa3b3d8b49096829b6a4b88d1969259e3b79b  verify/ts-ast-compare.mjs
-e18a87180203e428de83d9322c140ced6b9254f76a924856b61ee98ae7c87253  verify/run-verification.sh
+6a95e2890031a47abf256ce5949d642b19453082ad3457690886b0869936318b  verify/run-verification.sh
 ```
 
 ### Gebautes Binary (Referenz-Build)

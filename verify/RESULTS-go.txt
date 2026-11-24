@@ -1,5 +1,8 @@
 
-REVIEW - 46 changed literals in logic positions (confirm they are display text):
+REVIEW - 69 changed literals in logic positions (confirm they are display text):
+  agent/finding_recorder_test.go [call Contains]
+      before: "未登记"
+      after:  "nicht registriert"
   agent/prompt_prefix_test.go [call Contains]
       before: "意图 id: 11"
       after:  "Absicht id: 11"
@@ -137,9 +140,27 @@ UPDATE tasks
   notify/webhook_template_test.go [call Contains]
       before: "合法 JSON"
       after:  "gültiges JSON"
+  server/chat_llm_resolve_test.go [call Contains]
+      before: "尚未配置"
+      after:  "LLM noch nicht konfiguriert"
+  server/chat_llm_resolve_test.go [call Contains]
+      before: "没有已激活"
+      after:  "Keine aktivierte LLM-Konfiguration"
+  server/chat_llm_resolve_test.go [call Contains]
+      before: "尚未配置"
+      after:  "LLM noch nicht konfiguriert"
+  server/chat_llm_resolve_test.go [call Contains]
+      before: "没有已激活"
+      after:  "Keine aktivierte LLM-Konfiguration"
+  server/chat_mentions_test.go [call Contains]
+      before: "用户引用的记录快照"
+      after:  "Snapshot der benutzerreferenzierten Datensätze"
   server/chat_mentions_test.go [call Contains]
       before: "已截断"
       after:  "gekürzt"
+  server/chat_mentions_test.go [call Contains]
+      before: "用户引用的记录快照"
+      after:  "Snapshot der benutzerreferenzierten Datensätze"
   server/conversations.go [comparison]
       before: "新对话"
       after:  "Neue Unterhaltung"
@@ -153,6 +174,51 @@ UPDATE tasks
 		VALUES ($1,1,$2,'内置默认','system') 
       after:  `INSERT INTO agent_prompts(agent_id,version,template_text,note,updated_by)
 		VALUES ($1,1,$2,'Interner Standar
+  server/finding_traffic_test.go [call Contains]
+      before: "不可读取"
+      after:  "nicht lesen"
+  server/finding_workflow_test.go [call Contains]
+      before: "取消 Worker"
+      after:  "Worker nicht abbrechen"
+  server/finding_workflow_test.go [call Contains]
+      before: "独立漏洞记录 ID"
+      after:  "eigenständige Schwachstellen-Datensatz-IDs"
+  server/finding_workflow_test.go [call Contains]
+      before: "已关闭"
+      after:  "Auto-Traffic-Bindung deaktiviert"
+  server/finding_workflow_test.go [call Contains]
+      before: "支持裸主机、主机:端口或完整 URL"
+      after:  "unterstützt bare Hosts, Host:Port oder vollständige URLs"
+  server/finding_workflow_test.go [call Contains]
+      before: "报告前自动关联流量"
+      after:  "Automatische Datenverkehrs-Zuordnung vor dem Bericht"
+  server/finding_workflow_test.go [call Contains]
+      before: "绑定成功后重新调用"
+      after:  "Nach erfolgreicher Bindung get_finding_traffic erneut aufrufen"
+  server/findings_groups_test.go [call Contains]
+      before: "人工提交漏洞深入利用意图"
+      after:  "Manuell eingereichte Absicht zur tiefen Ausnutzung einer Schwachstelle"
+  server/intercept_detail_test.go [call Contains]
+      before: "对话已被删除"
+      after:  "Konversation wurde gelöscht"
+  server/notify_api_test.go [call Contains]
+      before: "近"
+      after:  "In den letzten 30 Minuten"
+  server/notify_api_test.go [call Contains]
+      before: "3 个漏洞"
+      after:  "3 neue Schwachstellen"
+  server/notify_api_test.go [call Contains]
+      before: "状态变更"
+      after:  "Statusänderung"
+  server/notify_api_test.go [call Contains]
+      before: "已修复"
+      after:  "Behoben"
+  server/notify_api_test.go [call Contains]
+      before: "测试"
+      after:  "Testnachricht"
+  server/notify_api_test.go [call Contains]
+      before: "其余"
+      after:  "restlichen"
   server/skill_upload_test.go [call Contains]
       before: "不支持的压缩方式"
       after:  "nicht unterstützte Kompressionsmethode"
@@ -162,6 +228,9 @@ UPDATE tasks
   server/skill_upload_test.go [call Contains]
       before: "非法路径"
       after:  "ungültigen Pfad"
+  server/task_categories_test.go [call Contains]
+      before: "task_ids 数量必须为"
+      after:  "task_ids Anzahl muss 1-100 betragen"
   server/task_delete_barrier_test.go [call Contains]
       before: "正在删除"
       after:  "wird gelöscht"
@@ -181,5 +250,5 @@ UPDATE tasks
       before: "不能执行工具"
       after:  "keine Werkzeugoperationen ausführen"
 
-Go files: 335 | code identical: 196 | only text literals changed: 139 (1774 literals) | new URLs: 0
+Go files: 335 | code identical: 186 | only text literals changed: 149 (1805 literals) | new URLs: 0
 RESULT: PASS - the code is token-identical; only Chinese text literals were translated; no new URLs.

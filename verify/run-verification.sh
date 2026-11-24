@@ -4,11 +4,18 @@
 set -eu
 cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
-BASE="$ROOT/../artex-failsafe-base"
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/artex-verification.XXXXXX")"
+trap 'rm -r -- "$WORK"' EXIT
+trap 'exit 1' HUP INT TERM
+BASE="$WORK/base"
+mkdir "$BASE"
 
 echo "==> 1/4  FailSafe-Basis aus diesem Baum rekonstruieren (Patch rueckwaerts anwenden)"
-rm -rf "$BASE" && cp -R "$ROOT" "$BASE"
-( cd "$BASE" && rm -rf .git && git init -q && git apply -R --whitespace=nowarn verify/german-translation.patch )
+tar -cf "$WORK/source.tar" --exclude=.git --exclude=node_modules --exclude=.next \
+  --exclude=out --exclude=data --exclude=keys --exclude='*.key' --exclude='*.pem' \
+  --exclude=.env --exclude='.env.*' --exclude=config.json --exclude=artifacts .
+tar -xf "$WORK/source.tar" -C "$BASE"
+( cd "$BASE" && git apply -R --whitespace=nowarn "$ROOT/verify/german-translation.patch" )
 
 echo "==> 2/4  Go: Token-Vergleich (go/scanner + go/ast)"
 ( cd verify/go-tokens && go run . "$BASE" "$ROOT" )
@@ -19,8 +26,14 @@ node verify/ts-ast-compare.mjs "$BASE/web/src" web/src web
 
 echo "==> 4/4  Bekannte Implantat-Indikatoren im Quelltext (tomicdd-Backdoor)"
 if grep -rnE 'verifyCaptcha|tomicdd|congdonglinux' --include='*.go' --include='*.ts' --include='*.tsx' agent server db cmd web/src; then
-  echo "FAIL: Indikator gefunden"; exit 1
+  echo "FAIL: Indikator gefunden"
+  exit 1
 else
+  status=$?
+  if [ "$status" -ne 1 ]; then
+    echo "FAIL: Indikatorsuche fehlgeschlagen (grep: $status)" >&2
+    exit "$status"
+  fi
   echo "absent: verifyCaptcha, tomicdd, congdonglinux"
 fi
 echo

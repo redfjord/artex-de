@@ -67,8 +67,7 @@ Das Skript rekonstruiert die FailSafe-Basis aus `verify/german-translation.patch
    Literale, die vorher chinesischen Text enthielten.
 2. **Web:** Alle 189 TypeScript/TSX-Dateien werden mit dem projekteigenen TypeScript-Compiler
    geparst. Die **Syntaxbäume sind identisch**, nur Anzeigetexte unterscheiden sich.
-3. **Keine neuen URLs oder Domains** in irgendeinem Text. Eine Datenabfluss-Adresse müsste hier
-   auftauchen.
+3. **Keine neuen URLs oder Domains**, die die Prüfer in den untersuchten Go- und Web-Texten erkennen.
 4. **Keine Indikatoren** des bekannten `tomicdd`-Backdoors (`verifyCaptcha` usw.).
 
 Ergebnisse, Methodik, Grenzen des Nachweises und alle bei der Prüfung gefundenen und behobenen
